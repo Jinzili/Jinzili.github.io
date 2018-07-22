@@ -146,7 +146,7 @@
         </div>
         <div class="article-info profile-block">
             <div class="article-info-block">
-                27
+                28
                 <span>文章</span>
             </div>
             <div class="article-info-block">
@@ -193,6 +193,133 @@
 
             
             <section id="main">
+    <article id="post-quartz的misfire策略" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+    
+        <h1 itemprop="name">
+            <a class="article-title" href="/2017/11/30/quartz的misfire策略/">quartz的misfire策略</a>
+        </h1>
+    
+
+                
+                    <div class="article-meta">
+                        
+    <div class="article-date">
+        <i class="fas fa-calendar-alt"></i>
+        <a href="/2017/11/30/quartz的misfire策略/">
+            <time datetime="2017-11-30T06:01:52.000Z" itemprop="datePublished">2017-11-30</time>
+        </a>
+    </div>
+
+
+                        
+    <div class="article-category">
+    	<i class="fas fa-folder"></i>
+        <a class="article-category-link" href="/categories/Java-Framework/">Java Framework</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/quartz/">quartz</a>
+    </div>
+
+                    </div>
+                
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+            
+            <p>quartz框架中提供了一系列misfire策略，是指任务因为某种原因错过了执行，可以根据不同任务需求定制不同的策略。</p>
+<h2 id="without-repeating-不重复的任务"><a href="#without-repeating-不重复的任务" class="headerlink" title="without repeating (不重复的任务)"></a>without repeating (不重复的任务)</h2><p>这是一个在2017-11-30 11:25:00执行的任务，距离我写此篇文章的时候已经过去了十分钟左右，所以一定会出发misfire策略</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">SimpleTrigger simpleTrigger = TriggerBuilder.newTrigger()</span><br><span class="line">    .withIdentity(<span class="string">"helloworld-trigger-name-1"</span>, <span class="string">"helloworld-trigger-group-1"</span>)</span><br><span class="line">    .withSchedule(SimpleScheduleBuilder.simpleSchedule())</span><br><span class="line">    .startAt(<span class="keyword">new</span> Date(<span class="number">1512012300000L</span>))</span><br><span class="line">    .build();</span><br></pre></td></tr></table></figure>
+<p><strong>withMisfireHandlingInstructionFireNow</strong></p>
+<p>错过之后马上执行</p>
+<p><strong>withMisfireHandlingInstructionNextWithRemainingCount</strong></p>
+<p>错过之后忽略</p>
+<h2 id="repeating-fixed-number-of-times-多次执行"><a href="#repeating-fixed-number-of-times-多次执行" class="headerlink" title="repeating fixed number of times (多次执行)"></a>repeating fixed number of times (多次执行)</h2><p>这是一个在2017-11-30 12:00:00执行的任务，共执行5次，每次间隔1个小时的任务<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">SimpleTrigger simpleTrigger = TriggerBuilder.newTrigger()</span><br><span class="line">    .withIdentity(<span class="string">"helloworld-trigger-name-1"</span>, <span class="string">"helloworld-trigger-group-1"</span>)</span><br><span class="line">    .withSchedule(SimpleScheduleBuilder.simpleSchedule()</span><br><span class="line">            .withRepeatCount(<span class="number">5</span>)</span><br><span class="line">            .withIntervalInHours(<span class="number">1</span>))</span><br><span class="line">    .startAt(<span class="number">1512014400000L</span>)</span><br><span class="line">    .build();</span><br></pre></td></tr></table></figure></p>
+<p><strong>withMisfireHandlingInstructionFireNow</strong></p>
+<p>错过之后，恢复正常时马上执行，总次数还是5次，假如在12:15:00分时执行了misfire，则以后每次执行都会在15分时执行，会执行到16:15:00。</p>
+<p><strong>withMisfireHandlingInstructionNowWithExistingCount</strong></p>
+<p>如果13:00:00错过执行，13:15:00恢复执行，则将清空已执行次数，总的执行次数为6，会执行到17:15:00。</p>
+<p><strong>withMisfireHandlingInstructionNextWithRemainingCount</strong></p>
+<p>错过之后忽略，do nothing， 总次数还是5次</p>
+<h2 id="reapting-forever-重复执行"><a href="#reapting-forever-重复执行" class="headerlink" title="reapting forever (重复执行)"></a>reapting forever (重复执行)</h2><p>会在2017-11-30 12:00:00开始第一次执行，并每隔1个小时重复执行下去</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">SimpleTrigger simpleTrigger = TriggerBuilder.newTrigger()</span><br><span class="line">    .withIdentity(<span class="string">"helloworld-trigger-name-1"</span>, <span class="string">"helloworld-trigger-group-1"</span>)</span><br><span class="line">    .withSchedule(SimpleScheduleBuilder.simpleSchedule()</span><br><span class="line">            .repeatForever()</span><br><span class="line">            .withIntervalInHours(<span class="number">1</span>))</span><br><span class="line">    .startAt(<span class="number">1512014400000L</span>)</span><br><span class="line">    .build();</span><br></pre></td></tr></table></figure>
+<p><strong>withMisfireHandlingInstructionFireNow</strong></p>
+<p>每次错过后，在下一个失效节点执行</p>
+<p><strong>withMisfireHandlingInstructionNextWithRemainingCount</strong></p>
+<p>每次错过后，在下个定义的时间点执行</p>
+<h2 id="Cron-triggers-cron表达式执行"><a href="#Cron-triggers-cron表达式执行" class="headerlink" title="Cron triggers (cron表达式执行)"></a>Cron triggers (cron表达式执行)</h2><p>这是一个会在每天下午两点到五点每隔一小时执行的任务<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">CronTrigger cronTrigger = TriggerBuilder.newTrigger()</span><br><span class="line">    .withIdentity(<span class="string">"helloworld-trigger-name-"</span> + i, <span class="string">"helloworld-trigger-group-1"</span>)</span><br><span class="line">    .withSchedule(CronScheduleBuilder.cronSchedule(<span class="string">"00 00 14-17 * * ?"</span>))</span><br><span class="line">    .build();</span><br></pre></td></tr></table></figure></p>
+<p><strong>withMisfireHandlingInstructionIgnoreMisfires</strong></p>
+<p>所有错过的任务马上执行</p>
+<p><strong>withMisfireHandlingInstructionDoNothing</strong></p>
+<p>所有错过的任务忽略</p>
+<p><strong>withMisfireHandlingInstructionFireAndProceed</strong></p>
+<p>合并错过的任务，如14点和15点的任务错过，只会执行一次misfire，下次整点继续执行。</p>
+
+        
+        </div>
+        <footer class="article-footer">
+            <div class="share-container">
+
+
+    <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">分享到：</a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">QQ空间</a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">新浪微博</a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">腾讯微博</a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">人人网</a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">微信</a>
+</div>
+<script>
+window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{"bdSize":16}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+<style>
+    .bdshare_popup_box {
+        border-radius: 4px;
+        border: #e1e1e1 solid 1px;
+    }
+    .bdshare-button-style0-16 a,
+    .bdshare-button-style0-16 .bds_more {
+        padding-left: 20px;
+        margin: 6px 10px 6px 0;
+    }
+    .bdshare_dialog_list a,
+    .bdshare_popup_list a,
+    .bdshare_popup_bottom a {
+        font-family: 'Microsoft Yahei';
+    }
+    .bdshare_popup_top {
+        display: none;
+    }
+    .bdshare_popup_bottom {
+        height: auto;
+        padding: 5px;
+    }
+</style>
+
+
+</div>
+
+            
+    
+        <a href="http://www.jinzili.cc/2017/11/30/quartz的misfire策略/#comments" class="article-comment-link">评论</a>
+    
+
+        </footer>
+    </div>
+    
+</article>
+
+
+
     <article id="post-Kubernetes-专治疑难杂症" class="article article-type-post" itemscope itemprop="blogPost">
     <div class="article-inner">
         
@@ -1308,123 +1435,6 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
 
 
 
-    <article id="post-让centos7中的docker飞过墙" class="article article-type-post" itemscope itemprop="blogPost">
-    <div class="article-inner">
-        
-        
-            <header class="article-header">
-                
-    
-        <h1 itemprop="name">
-            <a class="article-title" href="/2017/10/08/让centos7中的docker飞过墙/">让centos7中的docker飞过墙</a>
-        </h1>
-    
-
-                
-                    <div class="article-meta">
-                        
-    <div class="article-date">
-        <i class="fas fa-calendar-alt"></i>
-        <a href="/2017/10/08/让centos7中的docker飞过墙/">
-            <time datetime="2017-10-08T02:37:04.000Z" itemprop="datePublished">2017-10-08</time>
-        </a>
-    </div>
-
-
-                        
-    <div class="article-category">
-    	<i class="fas fa-folder"></i>
-        <a class="article-category-link" href="/categories/DevOps/">DevOps</a>
-    </div>
-
-                        
-    <div class="article-tag">
-        <i class="fas fa-tag"></i>
-        <a class="tag-link" href="/tags/centos7/">centos7</a>, <a class="tag-link" href="/tags/docker/">docker</a>
-    </div>
-
-                    </div>
-                
-            </header>
-        
-        
-        <div class="article-entry" itemprop="articleBody">
-        
-            
-            <p>安装shadowsocks</p>
-<p>yum install -y epel-release python-pip</p>
-<p>pip install shadowsocks</p>
-<p>vim /etc/shadowsocks.json</p>
-<p>{<br>  “server”: “your.vpn.com”,<br>  “server_port”: 8388,<br>  “password”: “pwd”,<br>  “method”: “aes-256-cfb”,<br>  “local_address”:”127.0.0.1”,<br>  “local_port”:1080<br>}</p>
-<p>客户端启动命令(server、password、methond是你购买的ss账号提供的服务)</p>
-<p>sslocal  -c /etc/shadowsocks.json</p>
-<p>安装privoxy</p>
-<p>yum install -y privoxy</p>
-<p>vi /etc/privoxy/config，注释掉listen-address行，在最后加入两行</p>
-<p>forward-socks5t / 127.0.0.1:1080 .<br>listen-address  127.0.0.1:8118</p>
-<p>vi ~/.bashrc</p>
-<p>export http_proxy=<a href="http://127.0.0.1:8118" target="_blank" rel="noopener">http://127.0.0.1:8118</a><br>export https_proxy=<a href="http://127.0.0.1:8118" target="_blank" rel="noopener">http://127.0.0.1:8118</a><br>export ftp_proxy=<a href="http://127.0.0.1:8118" target="_blank" rel="noopener">http://127.0.0.1:8118</a></p>
-<p>source ~/.bashrc</p>
-<p>systemctl restart privoxy，重启privoxy</p>
-<p>curl <a href="http://www.google.com，查看是否可以访问" target="_blank" rel="noopener">http://www.google.com，查看是否可以访问</a></p>
-<p>docker pull gcr.io/google_containers/kube-apiserver-amd64:v1.6.1 试试吧</p>
-
-        
-        </div>
-        <footer class="article-footer">
-            <div class="share-container">
-
-
-    <div class="bdsharebuttonbox">
-    <a href="#" class="bds_more" data-cmd="more">分享到：</a>
-    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">QQ空间</a>
-    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">新浪微博</a>
-    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">腾讯微博</a>
-    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">人人网</a>
-    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">微信</a>
-</div>
-<script>
-window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{"bdSize":16}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
-</script>
-<style>
-    .bdshare_popup_box {
-        border-radius: 4px;
-        border: #e1e1e1 solid 1px;
-    }
-    .bdshare-button-style0-16 a,
-    .bdshare-button-style0-16 .bds_more {
-        padding-left: 20px;
-        margin: 6px 10px 6px 0;
-    }
-    .bdshare_dialog_list a,
-    .bdshare_popup_list a,
-    .bdshare_popup_bottom a {
-        font-family: 'Microsoft Yahei';
-    }
-    .bdshare_popup_top {
-        display: none;
-    }
-    .bdshare_popup_bottom {
-        height: auto;
-        padding: 5px;
-    }
-</style>
-
-
-</div>
-
-            
-    
-        <a href="http://www.jinzili.cc/2017/10/08/让centos7中的docker飞过墙/#comments" class="article-comment-link">评论</a>
-    
-
-        </footer>
-    </div>
-    
-</article>
-
-
-
     <nav id="page-nav">
         <a class="extend prev" rel="prev" href="/">&laquo; 上一页</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">下一页 &raquo;</a>
     </nav>
@@ -1438,6 +1448,25 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
         <h3 class="widget-title">最新文章</h3>
         <div class="widget">
             <ul id="recent-post" class="">
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2018/07/22/test/" class="thumbnail">
+    
+    
+        <span class="thumbnail-image thumbnail-none"></span>
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"></p>
+                            <p class="item-title"><a href="/2018/07/22/test/" class="title">test</a></p>
+                            <p class="item-date"><time datetime="2018-07-22T14:59:45.000Z" itemprop="datePublished">2018-07-22</time></p>
+                        </div>
+                    </li>
                 
                     <li>
                         
@@ -1515,25 +1544,6 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
                         </div>
                     </li>
                 
-                    <li>
-                        
-                        <div class="item-thumbnail">
-                            <a href="/2018/06/30/Java类加载机制(一)/" class="thumbnail">
-    
-    
-        <span class="thumbnail-image thumbnail-none"></span>
-    
-</a>
-
-                        </div>
-                        
-                        <div class="item-inner">
-                            <p class="item-category"><a class="article-category-link" href="/categories/JavaBase/">JavaBase</a></p>
-                            <p class="item-title"><a href="/2018/06/30/Java类加载机制(一)/" class="title">Java类加载机制</a></p>
-                            <p class="item-date"><time datetime="2018-06-30T02:49:31.000Z" itemprop="datePublished">2018-06-30</time></p>
-                        </div>
-                    </li>
-                
             </ul>
         </div>
     </div>
@@ -1552,7 +1562,7 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
     <div class="widget-wrap">
         <h3 class="widget-title">归档</h3>
         <div class="widget">
-            <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">14</span></li></ul>
+            <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">14</span></li></ul>
         </div>
     </div>
 

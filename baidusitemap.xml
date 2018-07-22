@@ -4,6 +4,21 @@
 
     
   <url>
+    <loc>http://www.jinzili.cc/2018/07/22/test/</loc>
+    <lastmod>2018-07-22T14:59:45.361Z</lastmod>
+    <data>
+        <display>
+        <title>test</title>
+        <pubTime>2018-07-22T14:59:45.000Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://www.jinzili.cc/2018/07/22/%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%AD%A6%E4%B9%A0-zookeeper%E7%AE%80%E5%8D%95%E5%91%BD%E4%BB%A4%E5%8F%8Ajava-api/</loc>
     <lastmod>2018-07-22T13:43:55.166Z</lastmod>
     <data>
@@ -193,28 +208,6 @@
 
     
   <url>
-    <loc>http://www.jinzili.cc/2017/10/08/%E8%A7%A3%E5%86%B3js%E8%B7%A8%E5%9F%9F%E7%9A%84%E9%97%AE%E9%A2%98/</loc>
-    <lastmod>2018-04-21T02:24:21.738Z</lastmod>
-    <data>
-        <display>
-        <title>解决js跨域的问题</title>
-        <pubTime>2017-10-08T02:28:13.000Z</pubTime>
-        
-        <tag>js</tag>
-         
-        <tag>跨域</tag>
-         
-         
-           
-             
-              <breadCrumb title="技术杂谈" url="http://www.jinzili.cc/categories/%E6%8A%80%E6%9C%AF%E6%9D%82%E8%B0%88/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
     <loc>http://www.jinzili.cc/2017/10/08/%E8%AE%A9centos7%E4%B8%AD%E7%9A%84docker%E9%A3%9E%E8%BF%87%E5%A2%99/</loc>
     <lastmod>2018-04-21T02:24:21.738Z</lastmod>
     <data>
@@ -230,6 +223,28 @@
            
              
               <breadCrumb title="DevOps" url="http://www.jinzili.cc/categories/DevOps/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://www.jinzili.cc/2017/10/08/%E8%A7%A3%E5%86%B3js%E8%B7%A8%E5%9F%9F%E7%9A%84%E9%97%AE%E9%A2%98/</loc>
+    <lastmod>2018-04-21T02:24:21.738Z</lastmod>
+    <data>
+        <display>
+        <title>解决js跨域的问题</title>
+        <pubTime>2017-10-08T02:28:13.000Z</pubTime>
+        
+        <tag>js</tag>
+         
+        <tag>跨域</tag>
+         
+         
+           
+             
+              <breadCrumb title="技术杂谈" url="http://www.jinzili.cc/categories/%E6%8A%80%E6%9C%AF%E6%9D%82%E8%B0%88/"/>
           
         </display>
     </data>
@@ -309,52 +324,32 @@
 
     
   <url>
-    <loc>http://www.jinzili.cc/2017/10/17/quartz%E5%9F%BA%E7%A1%80%E8%AF%A6%E8%A7%A3/</loc>
-    <lastmod>2018-04-21T02:24:21.736Z</lastmod>
-    <data>
-        <display>
-        <title>quartz基础详解</title>
-        <pubTime>2017-10-17T10:40:41.000Z</pubTime>
-        
-        <tag>quartz</tag>
-         
-         
-           
-             
-              <breadCrumb title="Java Framework" url="http://www.jinzili.cc/categories/Java-Framework/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://www.jinzili.cc/2017/10/19/quartz%E9%9B%86%E7%BE%A4%E9%85%8D%E7%BD%AE/</loc>
-    <lastmod>2018-04-21T02:24:21.736Z</lastmod>
-    <data>
-        <display>
-        <title>quartz集群配置</title>
-        <pubTime>2017-10-19T07:14:27.000Z</pubTime>
-        
-        <tag>quartz</tag>
-         
-         
-           
-             
-              <breadCrumb title="Java Framework" url="http://www.jinzili.cc/categories/Java-Framework/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
     <loc>http://www.jinzili.cc/2017/11/30/quartz%E7%9A%84misfire%E7%AD%96%E7%95%A5/</loc>
     <lastmod>2018-04-21T02:24:21.736Z</lastmod>
     <data>
         <display>
         <title>quartz的misfire策略</title>
         <pubTime>2017-11-30T06:01:52.000Z</pubTime>
+        
+        <tag>quartz</tag>
+         
+         
+           
+             
+              <breadCrumb title="Java Framework" url="http://www.jinzili.cc/categories/Java-Framework/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://www.jinzili.cc/2017/10/17/quartz%E5%9F%BA%E7%A1%80%E8%AF%A6%E8%A7%A3/</loc>
+    <lastmod>2018-04-21T02:24:21.736Z</lastmod>
+    <data>
+        <display>
+        <title>quartz基础详解</title>
+        <pubTime>2017-10-17T10:40:41.000Z</pubTime>
         
         <tag>quartz</tag>
          
@@ -376,14 +371,34 @@
         <title>在web项目中应用Mybatis</title>
         <pubTime>2017-10-08T02:31:12.000Z</pubTime>
         
-        <tag>Mybatis</tag>
-         
         <tag>web</tag>
+         
+        <tag>Mybatis</tag>
          
          
            
              
               <breadCrumb title="Spring" url="http://www.jinzili.cc/categories/Spring/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://www.jinzili.cc/2017/10/19/quartz%E9%9B%86%E7%BE%A4%E9%85%8D%E7%BD%AE/</loc>
+    <lastmod>2018-04-21T02:24:21.736Z</lastmod>
+    <data>
+        <display>
+        <title>quartz集群配置</title>
+        <pubTime>2017-10-19T07:14:27.000Z</pubTime>
+        
+        <tag>quartz</tag>
+         
+         
+           
+             
+              <breadCrumb title="Java Framework" url="http://www.jinzili.cc/categories/Java-Framework/"/>
           
         </display>
     </data>
@@ -479,26 +494,6 @@
 
     
   <url>
-    <loc>http://www.jinzili.cc/2017/11/27/Kubernetes-%E4%B8%93%E6%B2%BB%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/</loc>
-    <lastmod>2018-04-21T02:24:21.733Z</lastmod>
-    <data>
-        <display>
-        <title>Kubernetes - 专治疑难杂症</title>
-        <pubTime>2017-11-27T08:14:26.000Z</pubTime>
-        
-        <tag>kubernetes</tag>
-         
-         
-           
-             
-              <breadCrumb title="DevOps" url="http://www.jinzili.cc/categories/DevOps/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
     <loc>http://www.jinzili.cc/2017/10/25/Spring-Cloud-Eureka/</loc>
     <lastmod>2018-04-21T02:24:21.733Z</lastmod>
     <data>
@@ -514,6 +509,26 @@
            
              
               <breadCrumb title="Spring Cloud" url="http://www.jinzili.cc/categories/Spring-Cloud/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://www.jinzili.cc/2017/11/27/Kubernetes-%E4%B8%93%E6%B2%BB%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/</loc>
+    <lastmod>2018-04-21T02:24:21.733Z</lastmod>
+    <data>
+        <display>
+        <title>Kubernetes - 专治疑难杂症</title>
+        <pubTime>2017-11-27T08:14:26.000Z</pubTime>
+        
+        <tag>kubernetes</tag>
+         
+         
+           
+             
+              <breadCrumb title="DevOps" url="http://www.jinzili.cc/categories/DevOps/"/>
           
         </display>
     </data>
