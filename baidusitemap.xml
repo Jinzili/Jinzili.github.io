@@ -4,21 +4,6 @@
 
     
   <url>
-    <loc>http://www.jinzili.cc/2018/07/22/test/</loc>
-    <lastmod>2018-07-22T14:59:45.361Z</lastmod>
-    <data>
-        <display>
-        <title>test</title>
-        <pubTime>2018-07-22T14:59:45.000Z</pubTime>
-        
-         
-           
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
     <loc>http://www.jinzili.cc/2018/07/22/%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%AD%A6%E4%B9%A0-zookeeper%E7%AE%80%E5%8D%95%E5%91%BD%E4%BB%A4%E5%8F%8Ajava-api/</loc>
     <lastmod>2018-07-22T13:43:55.166Z</lastmod>
     <data>
@@ -208,28 +193,6 @@
 
     
   <url>
-    <loc>http://www.jinzili.cc/2017/10/08/%E8%AE%A9centos7%E4%B8%AD%E7%9A%84docker%E9%A3%9E%E8%BF%87%E5%A2%99/</loc>
-    <lastmod>2018-04-21T02:24:21.738Z</lastmod>
-    <data>
-        <display>
-        <title>让centos7中的docker飞过墙</title>
-        <pubTime>2017-10-08T02:37:04.000Z</pubTime>
-        
-        <tag>docker</tag>
-         
-        <tag>centos7</tag>
-         
-         
-           
-             
-              <breadCrumb title="DevOps" url="http://www.jinzili.cc/categories/DevOps/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
     <loc>http://www.jinzili.cc/2017/10/08/%E8%A7%A3%E5%86%B3js%E8%B7%A8%E5%9F%9F%E7%9A%84%E9%97%AE%E9%A2%98/</loc>
     <lastmod>2018-04-21T02:24:21.738Z</lastmod>
     <data>
@@ -252,20 +215,16 @@
 
     
   <url>
-    <loc>http://www.jinzili.cc/2017/10/08/%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E5%9F%BA%E4%BA%8Edocker%E7%9A%84kubernetes%E9%9B%86%E7%BE%A4/</loc>
-    <lastmod>2018-04-21T02:24:21.737Z</lastmod>
+    <loc>http://www.jinzili.cc/2017/10/08/%E8%AE%A9centos7%E4%B8%AD%E7%9A%84docker%E9%A3%9E%E8%BF%87%E5%A2%99/</loc>
+    <lastmod>2018-04-21T02:24:21.738Z</lastmod>
     <data>
         <display>
-        <title>快速搭建基于docker的kubernetes集群</title>
-        <pubTime>2017-10-08T02:32:35.000Z</pubTime>
+        <title>让centos7中的docker飞过墙</title>
+        <pubTime>2017-10-08T02:37:04.000Z</pubTime>
         
-        <tag>kubernetes</tag>
-         
-        <tag>k8s</tag>
-         
         <tag>docker</tag>
          
-        <tag>kubeadm</tag>
+        <tag>centos7</tag>
          
          
            
@@ -290,6 +249,32 @@
         <tag>k8s</tag>
          
         <tag>dashboard</tag>
+         
+         
+           
+             
+              <breadCrumb title="DevOps" url="http://www.jinzili.cc/categories/DevOps/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://www.jinzili.cc/2017/10/08/%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E5%9F%BA%E4%BA%8Edocker%E7%9A%84kubernetes%E9%9B%86%E7%BE%A4/</loc>
+    <lastmod>2018-04-21T02:24:21.737Z</lastmod>
+    <data>
+        <display>
+        <title>快速搭建基于docker的kubernetes集群</title>
+        <pubTime>2017-10-08T02:32:35.000Z</pubTime>
+        
+        <tag>kubernetes</tag>
+         
+        <tag>k8s</tag>
+         
+        <tag>docker</tag>
+         
+        <tag>kubeadm</tag>
          
          
            
@@ -344,26 +329,6 @@
 
     
   <url>
-    <loc>http://www.jinzili.cc/2017/10/17/quartz%E5%9F%BA%E7%A1%80%E8%AF%A6%E8%A7%A3/</loc>
-    <lastmod>2018-04-21T02:24:21.736Z</lastmod>
-    <data>
-        <display>
-        <title>quartz基础详解</title>
-        <pubTime>2017-10-17T10:40:41.000Z</pubTime>
-        
-        <tag>quartz</tag>
-         
-         
-           
-             
-              <breadCrumb title="Java Framework" url="http://www.jinzili.cc/categories/Java-Framework/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
     <loc>http://www.jinzili.cc/2017/10/08/%E5%9C%A8web%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BA%94%E7%94%A8Mybatis/</loc>
     <lastmod>2018-04-21T02:24:21.736Z</lastmod>
     <data>
@@ -392,6 +357,26 @@
         <display>
         <title>quartz集群配置</title>
         <pubTime>2017-10-19T07:14:27.000Z</pubTime>
+        
+        <tag>quartz</tag>
+         
+         
+           
+             
+              <breadCrumb title="Java Framework" url="http://www.jinzili.cc/categories/Java-Framework/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://www.jinzili.cc/2017/10/17/quartz%E5%9F%BA%E7%A1%80%E8%AF%A6%E8%A7%A3/</loc>
+    <lastmod>2018-04-21T02:24:21.736Z</lastmod>
+    <data>
+        <display>
+        <title>quartz基础详解</title>
+        <pubTime>2017-10-17T10:40:41.000Z</pubTime>
         
         <tag>quartz</tag>
          
@@ -536,26 +521,6 @@
 
     
   <url>
-    <loc>http://www.jinzili.cc/2018/01/04/Hibernate-no-longer-referenced%E5%BC%82%E5%B8%B8/</loc>
-    <lastmod>2018-04-21T02:24:21.732Z</lastmod>
-    <data>
-        <display>
-        <title>Hibernate - no longer referenced异常</title>
-        <pubTime>2018-01-04T10:09:17.000Z</pubTime>
-        
-        <tag>Hibernate</tag>
-         
-         
-           
-             
-              <breadCrumb title="Java Framework" url="http://www.jinzili.cc/categories/Java-Framework/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
     <loc>http://www.jinzili.cc/2017/11/25/Java-synchronized/</loc>
     <lastmod>2018-04-21T02:24:21.732Z</lastmod>
     <data>
@@ -593,6 +558,26 @@
            
              
               <breadCrumb title="随笔" url="http://www.jinzili.cc/categories/%E9%9A%8F%E7%AC%94/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://www.jinzili.cc/2018/01/04/Hibernate-no-longer-referenced%E5%BC%82%E5%B8%B8/</loc>
+    <lastmod>2018-04-21T02:24:21.732Z</lastmod>
+    <data>
+        <display>
+        <title>Hibernate - no longer referenced异常</title>
+        <pubTime>2018-01-04T10:09:17.000Z</pubTime>
+        
+        <tag>Hibernate</tag>
+         
+         
+           
+             
+              <breadCrumb title="Java Framework" url="http://www.jinzili.cc/categories/Java-Framework/"/>
           
         </display>
     </data>
