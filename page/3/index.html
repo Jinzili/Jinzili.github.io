@@ -146,11 +146,11 @@
         </div>
         <div class="article-info profile-block">
             <div class="article-info-block">
-                29
+                31
                 <span>文章</span>
             </div>
             <div class="article-info-block">
-                37
+                39
                 <span>标签</span>
             </div>
         </div>
@@ -193,6 +193,323 @@
 
             
             <section id="main">
+    <article id="post-quartz基础详解" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+    
+        <h1 itemprop="name">
+            <a class="article-title" href="/2017/10/17/quartz基础详解/">quartz基础详解</a>
+        </h1>
+    
+
+                
+                    <div class="article-meta">
+                        
+    <div class="article-date">
+        <i class="fas fa-calendar-alt"></i>
+        <a href="/2017/10/17/quartz基础详解/">
+            <time datetime="2017-10-17T10:40:41.000Z" itemprop="datePublished">2017-10-17</time>
+        </a>
+    </div>
+
+
+                        
+    <div class="article-category">
+    	<i class="fas fa-folder"></i>
+        <a class="article-category-link" href="/categories/Java-Framework/">Java Framework</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/quartz/">quartz</a>
+    </div>
+
+                    </div>
+                
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+            
+            <h1 id="quartz基础知识"><a href="#quartz基础知识" class="headerlink" title="quartz基础知识"></a>quartz基础知识</h1><h2 id="Job"><a href="#Job" class="headerlink" title="Job"></a>Job</h2><p>要想让quartz来管理任务，就必须要遵守quartz的规。Job类需要实现org.quartz.Job接口，重写接口中唯一的exceute(JobExecutionContext jec)方法，在这个方法中实现具体的业务逻辑。JobExecutionContext保存了任务执行时的上下文，比如执行的是哪个trigger，也包括了执行时的数据信息等。定义一个Job：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">JobImpl</span> <span class="keyword">implements</span> <span class="title">Job</span></span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(JobExecutionContext jobExecutionContext)</span> <span class="keyword">throws</span> JobExecutionException </span>&#123;</span><br><span class="line">        <span class="comment">// do some thing... </span></span><br><span class="line">        SimpleDateFormat sdf = <span class="keyword">new</span> SimpleDateFormat(<span class="string">"yyyy-MM-dd HH:mm:ss"</span>);</span><br><span class="line">        System.out.println(sdf.format(<span class="keyword">new</span> Date()));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="JobDetail"><a href="#JobDetail" class="headerlink" title="JobDetail"></a>JobDetail</h2><p>JobDetail接口定义了用来描述一个job所有的属性信息，下面列出一些核心属性：</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>class</td>
+<td>Job实现类，jobDetail根据此获取Job实例</td>
+</tr>
+<tr>
+<td>name</td>
+<td>Job名称，同一Job组中名称唯一</td>
+</tr>
+<tr>
+<td>group</td>
+<td>Job组名, 同一scheduler容器中组名唯一</td>
+</tr>
+<tr>
+<td>description</td>
+<td>Job描述信息</td>
+</tr>
+<tr>
+<td>durability</td>
+<td>是否持久化。如果非持久化，当没有trigger与之关联，则会被自动删除。</td>
+</tr>
+<tr>
+<td>shouldRecover</td>
+<td>是否可恢复。如果可恢复，那么job执行中，scheduler崩溃，当scheduler重启后，此job会被重新执行。</td>
+</tr>
+<tr>
+<td>jobDataMap</td>
+<td>可把任意kv数据存入此属性，支持序列化实现了Serialiable接口，key=String, value=Object。</td>
+</tr>
+</tbody>
+</table>
+<p>定义一个JobDetail：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义一个job</span></span><br><span class="line">JobDetail jobDetail = JobBuilder.newJob(JobImpl.class)</span><br><span class="line">        .withIdentity(<span class="string">"myJob"</span>, <span class="string">"myJobGroup"</span>)</span><br><span class="line">        .build();</span><br></pre></td></tr></table></figure>
+<h2 id="Trigger"><a href="#Trigger" class="headerlink" title="Trigger"></a>Trigger</h2><p>quartz提供了多种触发器，他们是Trigger的具体实现。其中经常使用的有两种：SimpleTrigger和CronTrigger。</p>
+<h3 id="SimpleTrigger"><a href="#SimpleTrigger" class="headerlink" title="SimpleTrigger"></a>SimpleTrigger</h3><p>SimpleTrigger包含几个特点：开始时间、结束时间、重复次数和重复间隔。结束时间会覆盖重复次数，比如某触发器已到结束时间但是未达到重复次数也会停止执行。如果任务符合这种工作性质，那么使用SimpleTrigger这种触发器最适合。定义一个SimpleTrigger:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">// 定义一个trigger</span></span><br><span class="line">Trigger trigger = TriggerBuilder.newTrigger()</span><br><span class="line">        .withIdentity(<span class="string">"myTrigger"</span>, <span class="string">"myTriggerGroup"</span>)</span><br><span class="line">        .startNow()</span><br><span class="line">        .withSchedule(SimpleScheduleBuilder.simpleSchedule()</span><br><span class="line">                .withIntervalInSeconds(<span class="number">5</span>)</span><br><span class="line">                .repeatForever())</span><br><span class="line">        .build();</span><br></pre></td></tr></table></figure>
+<p>这个Trigger立即开始并每5秒无限循环执行。<br>SimpleTrigger提供了许多执行策略，比如：未来5分钟开始执行、偶数小时执行等，需要在不同业务逻辑中不同配置。<br><strong>自定义失败重试策略</strong></p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>REPEAT_INDEFINITELY</td>
+<td>不断重复直到结束时间戳</td>
+</tr>
+<tr>
+<td>MISFIRE_INSTRUCTION_FIRE_NOW</td>
+<td>如果失败立即再次触发</td>
+</tr>
+<tr>
+<td>MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT</td>
+<td>如果失败立即再次触发，重试次数+1，遵守结束时间戳</td>
+</tr>
+<tr>
+<td>MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_REMAINING_REPEAT_COUNT</td>
+<td>如果失败立即再次触发，遵守结束时间戳</td>
+</tr>
+<tr>
+<td>MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT</td>
+<td>如果失败，则到下次触发时间再执行</td>
+</tr>
+</tbody>
+</table>
+<h3 id="CronTrigger"><a href="#CronTrigger" class="headerlink" title="CronTrigger"></a>CronTrigger</h3><p>CronTrigger触发器用的更多一下，这个触发器基于日历的概念，而不是具体开始时间，具体结束时间，重复次数等。你可以指定每周一凌晨2点执行，每月每周一执行等复杂逻辑。使用此触发器需要了解Cron表达式，这里不在赘述。定义一个CronTrigger：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CronTrigger cronTrigger = TriggerBuilder.newTrigger()</span><br><span class="line">    .withIdentity(<span class="string">"helloworld-trigger-name-1"</span>, <span class="string">"helloworld-trigger-group-1"</span>)</span><br><span class="line">    .withSchedule(CronScheduleBuilder.cronSchedule(<span class="string">"0/5 * * ? * *"</span>))</span><br><span class="line">    .startNow()</span><br><span class="line">    .build();</span><br></pre></td></tr></table></figure>
+<p><strong>自定义失败重试策略</strong></p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MISFIRE_INSTRUCTION_FIRE_ONCE_NOW</td>
+<td>如果失败立即再次触发</td>
+</tr>
+<tr>
+<td>MISFIRE_INSTRUCTION_DO_NOTHING</td>
+<td>如果失败则到下次执行时间再次触发</td>
+</tr>
+</tbody>
+</table>
+<h2 id="Scheduler容器"><a href="#Scheduler容器" class="headerlink" title="Scheduler容器"></a>Scheduler容器</h2><p>一个Scheduler容器对应一个quartz独立的运行容器，在Scheduler容器中，将Trigger绑定到JobDetail上，由Scheduler调度执行。</p>
+<p><strong>一个Trigger对应一个JobDetail，一个JobDetail可对应多个Trigger。</strong></p>
+<p>Scheduler容器以键值对的形式保存了任务执行时的上下文信息，还提供了多个接口方法，允许外部通过组名及任务名或触发器名访问容器中的JobDetail或Trigger，定义一个Scheduler：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();</span><br></pre></td></tr></table></figure>
+<p>注册一个可执行的任务到Scheduler容器中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scheduler.scheduleJob(jobDetail, trigger);</span><br></pre></td></tr></table></figure>
+<p>一个可执行的任务需要一个JobDetail和一个Trigger，这个很好理解，一个任务需要任务的描述信息，和一个触发任务执行的策略。quartz将任务和触发器解耦，这样我们就可以实现一个任务对应多个触发器。</p>
+<h2 id="一个简单demo"><a href="#一个简单demo" class="headerlink" title="一个简单demo"></a>一个简单demo</h2><p>因为quartz的是多线程执行的，所以我们在main方法里测试而不是使用JUnit。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * TODO quartz simple demo</span></span><br><span class="line"><span class="comment"> * Created by jinzili on 17/10/2017.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">QuartzController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">JobImpl</span> <span class="keyword">implements</span> <span class="title">Job</span></span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(JobExecutionContext jobExecutionContext)</span> <span class="keyword">throws</span> JobExecutionException </span>&#123;</span><br><span class="line">            SimpleDateFormat sdf = <span class="keyword">new</span> SimpleDateFormat(<span class="string">"yyyy-MM-dd HH:mm:ss"</span>);</span><br><span class="line">            System.out.println(sdf.format(<span class="keyword">new</span> Date()));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> SchedulerException</span>&#123;</span><br><span class="line">        Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 定义一个jobDetail</span></span><br><span class="line">        JobDetail jobDetail = JobBuilder.newJob(JobImpl.class)</span><br><span class="line">                .withIdentity(<span class="string">"myJob"</span>, <span class="string">"myJobGroup"</span>)</span><br><span class="line">                .build();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 定义一个trigger</span></span><br><span class="line">        Trigger trigger = TriggerBuilder.newTrigger()</span><br><span class="line">                .withIdentity(<span class="string">"myTrigger"</span>, <span class="string">"myTriggerGroup"</span>)</span><br><span class="line">                .startNow()</span><br><span class="line">                .withSchedule(SimpleScheduleBuilder.simpleSchedule()</span><br><span class="line">                        .withIntervalInSeconds(<span class="number">5</span>)</span><br><span class="line">                        .repeatForever())</span><br><span class="line">                .build();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        scheduler.scheduleJob(jobDetail, trigger);</span><br><span class="line">        scheduler.start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+        
+        </div>
+        <footer class="article-footer">
+            <div class="share-container">
+
+
+    <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">分享到：</a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">QQ空间</a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">新浪微博</a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">腾讯微博</a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">人人网</a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">微信</a>
+</div>
+<script>
+window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{"bdSize":16}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+<style>
+    .bdshare_popup_box {
+        border-radius: 4px;
+        border: #e1e1e1 solid 1px;
+    }
+    .bdshare-button-style0-16 a,
+    .bdshare-button-style0-16 .bds_more {
+        padding-left: 20px;
+        margin: 6px 10px 6px 0;
+    }
+    .bdshare_dialog_list a,
+    .bdshare_popup_list a,
+    .bdshare_popup_bottom a {
+        font-family: 'Microsoft Yahei';
+    }
+    .bdshare_popup_top {
+        display: none;
+    }
+    .bdshare_popup_bottom {
+        height: auto;
+        padding: 5px;
+    }
+</style>
+
+
+</div>
+
+            
+    
+        <a href="http://www.jinzili.cc/2017/10/17/quartz基础详解/#comments" class="article-comment-link">评论</a>
+    
+
+        </footer>
+    </div>
+    
+</article>
+
+
+
+    <article id="post-Spring-Data-JPA中的nativeQuery和pageable" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+    
+        <h1 itemprop="name">
+            <a class="article-title" href="/2017/10/11/Spring-Data-JPA中的nativeQuery和pageable/">Spring Data JPA中的nativeQuery和pageable</a>
+        </h1>
+    
+
+                
+                    <div class="article-meta">
+                        
+    <div class="article-date">
+        <i class="fas fa-calendar-alt"></i>
+        <a href="/2017/10/11/Spring-Data-JPA中的nativeQuery和pageable/">
+            <time datetime="2017-10-11T11:59:21.000Z" itemprop="datePublished">2017-10-11</time>
+        </a>
+    </div>
+
+
+                        
+    <div class="article-category">
+    	<i class="fas fa-folder"></i>
+        <a class="article-category-link" href="/categories/Spring-Cloud/">Spring Cloud</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/SpringDataJPA/">SpringDataJPA</a>
+    </div>
+
+                    </div>
+                
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+            
+            <p>在Sprint Data JPA中默认提供了许多CRUD方法，基本上单表操作已经完全够用了，但是在开发过程中发现使用nativeQuery不能和pageable共用，例如</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Query</span>(value = <span class="string">"SELECT * FROM USERS WHERE EMAIL_ADDRESS = ?1"</span>, nativeQuery = <span class="keyword">true</span>)</span><br><span class="line">  <span class="function">Page&lt;User&gt; <span class="title">findByEmailAddress</span><span class="params">(String emailAddress, Pageable pageable)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>此时项目启动时会报:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.data.jpa.repository.query.InvalidJpaQueryMethodException: Cannot use <span class="keyword">native</span> queries with dynamic sorting and/or pagination in method</span><br></pre></td></tr></table></figure>
+<p>意思就是同一个方法中native queries 不能和 sorting、pagination共用。<br>但是这种需求却是实实在在的存在的，查看Spring Data JPA官方文档，给出了一下解决方式:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Query</span>(value = <span class="string">"SELECT * FROM USERS WHERE LASTNAME = ?1"</span>,</span><br><span class="line">    countQuery = <span class="string">"SELECT count(*) FROM USERS WHERE LASTNAME = ?1"</span>,</span><br><span class="line">    nativeQuery = <span class="keyword">true</span>)</span><br><span class="line">  <span class="function">Page&lt;User&gt; <span class="title">findByLastname</span><span class="params">(String lastname, Pageable pageable)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>使用此方式后依然报上文的exception，查阅其他资料后使用如下方式解决:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Query</span>(value = <span class="string">"SELECT * FROM USERS WHERE EMAIL_ADDRESS = ?1 \n#pageable\n"</span>, nativeQuery = <span class="keyword">true</span>)</span><br><span class="line">  <span class="function">Page&lt;User&gt; <span class="title">findByEmailAddress</span><span class="params">(String emailAddress, Pageable pageable)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>在sql一句后加上 <strong>\n#pageable\n</strong></p>
+<p>这很有可能是Spring Data JPA的一个bug，并且在Spring的jira上也发现了这个issue<br><strong><a href="https://jira.spring.io/browse/DATAJPA-928" target="_blank" rel="noopener">https://jira.spring.io/browse/DATAJPA-928</a></strong></p>
+<p>都是泪。</p>
+
+        
+        </div>
+        <footer class="article-footer">
+            <div class="share-container">
+
+
+    <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">分享到：</a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">QQ空间</a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">新浪微博</a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">腾讯微博</a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">人人网</a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">微信</a>
+</div>
+<script>
+window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{"bdSize":16}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+<style>
+    .bdshare_popup_box {
+        border-radius: 4px;
+        border: #e1e1e1 solid 1px;
+    }
+    .bdshare-button-style0-16 a,
+    .bdshare-button-style0-16 .bds_more {
+        padding-left: 20px;
+        margin: 6px 10px 6px 0;
+    }
+    .bdshare_dialog_list a,
+    .bdshare_popup_list a,
+    .bdshare_popup_bottom a {
+        font-family: 'Microsoft Yahei';
+    }
+    .bdshare_popup_top {
+        display: none;
+    }
+    .bdshare_popup_bottom {
+        height: auto;
+        padding: 5px;
+    }
+</style>
+
+
+</div>
+
+            
+    
+        <a href="http://www.jinzili.cc/2017/10/11/Spring-Data-JPA中的nativeQuery和pageable/#comments" class="article-comment-link">评论</a>
+    
+
+        </footer>
+    </div>
+    
+</article>
+
+
+
     <article id="post-Java发送Http请求-HttpClientUtils" class="article article-type-post" itemscope itemprop="blogPost">
     <div class="article-inner">
         
@@ -1198,118 +1515,8 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
 
 
 
-    <article id="post-WebSocket实现即时聊天室" class="article article-type-post" itemscope itemprop="blogPost">
-    <div class="article-inner">
-        
-        
-            <header class="article-header">
-                
-    
-        <h1 itemprop="name">
-            <a class="article-title" href="/2017/10/07/WebSocket实现即时聊天室/">WebSocket实现即时聊天室</a>
-        </h1>
-    
-
-                
-                    <div class="article-meta">
-                        
-    <div class="article-date">
-        <i class="fas fa-calendar-alt"></i>
-        <a href="/2017/10/07/WebSocket实现即时聊天室/">
-            <time datetime="2017-10-07T01:39:09.000Z" itemprop="datePublished">2017-10-07</time>
-        </a>
-    </div>
-
-
-                        
-    <div class="article-category">
-    	<i class="fas fa-folder"></i>
-        <a class="article-category-link" href="/categories/技术杂谈/">技术杂谈</a>
-    </div>
-
-                        
-    <div class="article-tag">
-        <i class="fas fa-tag"></i>
-        <a class="tag-link" href="/tags/WebSocket/">WebSocket</a>, <a class="tag-link" href="/tags/online/">online</a>, <a class="tag-link" href="/tags/聊天室/">聊天室</a>
-    </div>
-
-                    </div>
-                
-            </header>
-        
-        
-        <div class="article-entry" itemprop="articleBody">
-        
-            
-            <h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>很多网站为了实现即时聊天，使用的是轮询方式（在特定的时间间隔，由浏览器向服务器端发出 Http request，然后由服务器返回最新的数据）实现。这种传统的 Http request的方式有个明显的缺点，浏览器需要不断的向服务器发出请求，然而HTTP request 的header是非常长的，里面包含的有用数据可能只是一个很小的值，这样会占用很多的带宽。<br>比较新的方式是Comet—用了Ajax，但是还是要发出请求。<br>但是在WebSocket API中，浏览器和服务器只需要做一个握手的动作，然后，浏览器和服务器之间就形成了一条快速通道。两者之间就直接可以数据互相传送。这样做的两大好处是</p>
-<ol>
-<li>Header<br>互相沟通的Header是很小的-大概只有 2 Bytes</li>
-<li>Server Push<br>服务器的推送，服务器不再被动的接收到浏览器的request之后才返回数据，而是在有新数据时就主动推送给浏览器。</li>
-</ol>
-<h1 id="开发基于WebSocket协议的聊天室"><a href="#开发基于WebSocket协议的聊天室" class="headerlink" title="开发基于WebSocket协议的聊天室"></a>开发基于WebSocket协议的聊天室</h1><h2 id="开发环境"><a href="#开发环境" class="headerlink" title="开发环境"></a>开发环境</h2><p>MyEclipse2014、JDK1.7.45 64位、Tomcat8</p>
-<h2 id="WebSocketConfig"><a href="#WebSocketConfig" class="headerlink" title="WebSocketConfig"></a>WebSocketConfig</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.sx2.websocket;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.Set;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.websocket.Endpoint;</span><br><span class="line"><span class="keyword">import</span> javax.websocket.server.ServerApplicationConfig;</span><br><span class="line"><span class="keyword">import</span> javax.websocket.server.ServerEndpointConfig;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> Jin</span></span><br><span class="line"><span class="comment"> *	在Tomcat启动的时候会加载此类(因为实现了ServerApplicationConfig接口)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WebSocketConfig</span> <span class="keyword">implements</span> <span class="title">ServerApplicationConfig</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">public</span> Set&lt;Class&lt;?&gt;&gt; getAnnotatedEndpointClasses(Set&lt;Class&lt;?&gt;&gt; scan) &#123;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * 这里会自动扫描带有@ServerEndpoint注解的类</span></span><br><span class="line"><span class="comment">		 * 返回它们的类名集合,这里可以做一些过滤,比如过滤测试用的带有@ServerEndpoint注解的类</span></span><br><span class="line"><span class="comment">		 * 最后一定要返回过滤后的set集合,相当于注册服务</span></span><br><span class="line"><span class="comment">		 * 最后一定要返回过滤后的set集合,相当于注册服务</span></span><br><span class="line"><span class="comment">		 * 最后一定要返回过滤后的set集合,相当于注册服务</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">return</span> scan;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Set&lt;ServerEndpointConfig&gt; <span class="title">getEndpointConfigs</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">			Set&lt;Class&lt;? extends Endpoint&gt;&gt; arg0)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="chatSocket-java"><a href="#chatSocket-java" class="headerlink" title="chatSocket.java"></a>chatSocket.java</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.UnsupportedEncodingException;</span><br><span class="line"><span class="keyword">import</span> java.net.URLDecoder;</span><br><span class="line"><span class="keyword">import</span> java.util.Date;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"><span class="keyword">import</span> java.util.HashSet;</span><br><span class="line"><span class="keyword">import</span> java.util.Iterator;</span><br><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"><span class="keyword">import</span> java.util.Set;</span><br><span class="line"><span class="keyword">import</span> javax.websocket.OnClose;</span><br><span class="line"><span class="keyword">import</span> javax.websocket.OnMessage;</span><br><span class="line"><span class="keyword">import</span> javax.websocket.OnOpen;</span><br><span class="line"><span class="keyword">import</span> javax.websocket.Session;</span><br><span class="line"><span class="keyword">import</span> javax.websocket.server.ServerEndpoint;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.alibaba.fastjson.JSONObject;</span><br><span class="line"><span class="keyword">import</span> com.sx2.pojo.WebSocketResult;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> Jin</span></span><br><span class="line"><span class="comment"> * 这里带有<span class="doctag">@ServerEndpoint</span>注解,会自动被扫描到</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@ServerEndpoint</span>(<span class="string">"/chatSocket"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ChatSocket</span> </span>&#123;</span><br><span class="line">	<span class="comment">//所有的实例的集合</span></span><br><span class="line">	<span class="keyword">private</span>  <span class="keyword">static</span>  Set&lt;ChatSocket&gt;  sockets=<span class="keyword">new</span> HashSet&lt;ChatSocket&gt;();</span><br><span class="line">	<span class="comment">//保存每个username对应的用户头像,这里只是这个项目中需要,如果实际项目中不需要,此变量无用</span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> Map&lt;String, String&gt; photos = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">	<span class="comment">//保存每个用户的用户名</span></span><br><span class="line">	<span class="keyword">private</span>  <span class="keyword">static</span>  Set&lt;String&gt;   names=<span class="keyword">new</span> HashSet&lt;String&gt;();</span><br><span class="line">	<span class="comment">//每个用户进入聊天室,都会开启一个session,要注意的是这里的session是javax.websocket.Session</span></span><br><span class="line">	<span class="keyword">private</span>  Session  session;</span><br><span class="line">	<span class="comment">//当有用户进入聊天室时,保存用户名</span></span><br><span class="line">	<span class="keyword">private</span> String username;</span><br><span class="line">	<span class="comment">//当有用户进入聊天室时,保存用户头像,不是必须的</span></span><br><span class="line">	<span class="keyword">private</span> String photo;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 每当有用户进入聊天室时,都会执行一次此函数</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> session</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@OnOpen</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span>  <span class="keyword">void</span> <span class="title">open</span><span class="params">(Session  session)</span></span>&#123;</span><br><span class="line">			<span class="keyword">this</span>.session=session;</span><br><span class="line">			sockets.add(<span class="keyword">this</span>);</span><br><span class="line">			<span class="comment">//这里的逻辑是得到请求路径后的参数</span></span><br><span class="line">			<span class="comment">//比如:ws://localhost:8080/SX2/chatSocket?username=jin&amp;photo=/image/user/b3.png",那么queryString就是username=jin&amp;photo=/image/user/b3.png</span></span><br><span class="line">			<span class="comment">//username为用户的用户名,是必须的。photo为用户的头像,看实际需要并不是必须的</span></span><br><span class="line">			String  queryString = session.getQueryString();</span><br><span class="line">			<span class="comment">//对得到queryString进行切割,得到用户名和头像</span></span><br><span class="line">			String[] infos = queryString.split(<span class="string">"&amp;"</span>);</span><br><span class="line">			<span class="keyword">this</span>.username = infos[<span class="number">0</span>].substring(infos[<span class="number">0</span>].indexOf(<span class="string">"="</span>) + <span class="number">1</span>);</span><br><span class="line">			<span class="keyword">this</span>.photo = infos[<span class="number">1</span>].substring(infos[<span class="number">1</span>].indexOf(<span class="string">"="</span>) + <span class="number">1</span>);</span><br><span class="line">			<span class="comment">//WebSocket返回值的包装类</span></span><br><span class="line">			WebSocketResult message = <span class="keyword">new</span> WebSocketResult();</span><br><span class="line">			String encodeUsername = <span class="string">""</span>;</span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				<span class="keyword">if</span>(<span class="keyword">this</span>.username.matches(<span class="string">"[A-Za-z]"</span>))&#123;   <span class="comment">//如果用户的用户名是纯英文,比如Tom,Jerry,不用编码</span></span><br><span class="line">					encodeUsername = <span class="keyword">this</span>.username;</span><br><span class="line">				&#125;<span class="keyword">else</span>&#123;									 <span class="comment">//如果用户的用户名不是纯英文的,则需要编码</span></span><br><span class="line">					encodeUsername = URLDecoder.decode(<span class="keyword">this</span>.username,<span class="string">"UTF-8"</span>);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">this</span>.username = encodeUsername;</span><br><span class="line">				<span class="comment">//将经过处理的用户名,添加到用户名集合中</span></span><br><span class="line">				names.add( encodeUsername);</span><br><span class="line">				<span class="comment">//将用户名集合放到返回值中</span></span><br><span class="line">				message.setNames(names);</span><br><span class="line">				</span><br><span class="line">				photos.put(encodeUsername, photo);</span><br><span class="line">				message.setPhotos(photos);</span><br><span class="line">				<span class="comment">//将欢迎信息放到返回值中</span></span><br><span class="line">				message.setWelCome(encodeUsername+<span class="string">"进入聊天室！！"</span>);</span><br><span class="line">				<span class="comment">//将返回值的包装类转为json字符串,向所有人打印欢迎信息。</span></span><br><span class="line">				broadcast(sockets, JSONObject.toJSONString(message));</span><br><span class="line">			&#125; <span class="keyword">catch</span> (UnsupportedEncodingException e1) &#123;</span><br><span class="line">				<span class="comment">// TODO Auto-generated catch block</span></span><br><span class="line">				message.setWelCome(<span class="string">"服务器异常!"</span>);</span><br><span class="line">				broadcast(sockets, JSONObject.toJSONString(message));</span><br><span class="line">			&#125;</span><br><span class="line">			</span><br><span class="line">			</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="meta">@SuppressWarnings</span>(<span class="string">"deprecation"</span>)</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 当有用户发送消息时,会执行此函数</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> session  为此用户开启的session</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> msg 用户发送的消息文本</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@OnMessage</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span>  <span class="keyword">void</span> <span class="title">receive</span><span class="params">(Session  session,String msg )</span></span>&#123;</span><br><span class="line">		</span><br><span class="line">		WebSocketResult  message=<span class="keyword">new</span> WebSocketResult();</span><br><span class="line">		<span class="comment">//将消息文本放到返回值中</span></span><br><span class="line">		message.setSendMsg(msg);</span><br><span class="line">		<span class="comment">//将来自哪个用户放到返回值中</span></span><br><span class="line">		message.setFrom(<span class="keyword">this</span>.username);</span><br><span class="line">		<span class="comment">//将发送日期放到返回值中</span></span><br><span class="line">		message.setDate(<span class="keyword">new</span> Date().toLocaleString());</span><br><span class="line">		<span class="comment">//用户头像</span></span><br><span class="line">		message.setPhotos(photos);</span><br><span class="line">		<span class="comment">//向所有人打印发送的消息</span></span><br><span class="line">		broadcast(sockets, JSONObject.toJSONString(message));</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * </span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> session 为此用户开启的session</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@OnClose</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span>  <span class="keyword">void</span> <span class="title">close</span><span class="params">(Session session)</span></span>&#123;</span><br><span class="line">		<span class="comment">//从实例集合中移除此实例</span></span><br><span class="line">		sockets.remove(<span class="keyword">this</span>);</span><br><span class="line">		<span class="comment">//从用户名集合中移除此用户名</span></span><br><span class="line">		names.remove(<span class="keyword">this</span>.username);</span><br><span class="line">		<span class="comment">//从头像集合中移除此用户的头像</span></span><br><span class="line">		photos.remove(<span class="keyword">this</span>.username);</span><br><span class="line">		WebSocketResult   message=<span class="keyword">new</span> WebSocketResult();</span><br><span class="line">		<span class="comment">//将欢送消息放到返回值中</span></span><br><span class="line">		message.setWelCome(<span class="keyword">this</span>.username+<span class="string">"退出聊天室！！"</span>);</span><br><span class="line">		<span class="comment">//重新设置用户名集合</span></span><br><span class="line">		message.setNames(names);</span><br><span class="line">		<span class="comment">//重新设置头像集合</span></span><br><span class="line">		message.setPhotos(photos);</span><br><span class="line">		<span class="comment">//向所有人打印欢送消息</span></span><br><span class="line">		broadcast(sockets, JSONObject.toJSONString(message));</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * </span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> ss 所有实例集合</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> msg 要向浏览器端发送的json字符串</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">broadcast</span><span class="params">(Set&lt;ChatSocket&gt;  ss ,String msg )</span></span>&#123;</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">for</span> (Iterator&lt;ChatSocket&gt; iterator = ss.iterator(); iterator.hasNext();) &#123;</span><br><span class="line">			ChatSocket chatSocket = (ChatSocket) iterator.next();</span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				<span class="comment">//使用session的getBasicRemote方法向浏览器端发送json字符串</span></span><br><span class="line">				chatSocket.session.getBasicRemote().sendText(msg);</span><br><span class="line">			&#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">				e.printStackTrace();</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>WebSocketResult.java</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"><span class="keyword">import</span> java.util.Set;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> Jin</span></span><br><span class="line"><span class="comment"> * WebSocket返回值的包装类</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WebSocketResult</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">private</span> String sendMsg;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">private</span> String date;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">private</span> String from;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">private</span> String welCome;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">private</span> Set&lt;String&gt; names;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> Map&lt;String, String&gt; photos;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getWelCome</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> welCome;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setWelCome</span><span class="params">(String welCome)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.welCome = welCome;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getSendMsg</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> sendMsg;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setSendMsg</span><span class="params">(String sendMsg)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.sendMsg = sendMsg;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getDate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> date;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setDate</span><span class="params">(String date)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.date = date;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getFrom</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> from;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setFrom</span><span class="params">(String from)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.from = from;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Set&lt;String&gt; <span class="title">getNames</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> names;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setNames</span><span class="params">(Set&lt;String&gt; names)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.names = names;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Map&lt;String, String&gt; <span class="title">getPhotos</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> photos;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setPhotos</span><span class="params">(Map&lt;String, String&gt; photos)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.photos = photos;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="客户端代码"><a href="#客户端代码" class="headerlink" title="客户端代码"></a>客户端代码</h2><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">xmlns</span>=<span class="string">"http://www.w3.org/1999/xhtml"</span> <span class="attr">xml:lang</span>=<span class="string">"en"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>Apache Tomcat WebSocket Examples: Chat<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">style</span> <span class="attr">type</span>=<span class="string">"text/css"</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="undefined">        input#chat &#123;</span></span><br><span class="line"><span class="undefined">            width: 410px</span></span><br><span class="line"><span class="undefined">        &#125;</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">        #console-container &#123;</span></span><br><span class="line"><span class="undefined">            width: 400px;</span></span><br><span class="line"><span class="undefined">        &#125;</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">        #console &#123;</span></span><br><span class="line"><span class="undefined">            border: 1px solid #CCCCCC;</span></span><br><span class="line"><span class="undefined">            border-right-color: #999999;</span></span><br><span class="line"><span class="undefined">            border-bottom-color: #999999;</span></span><br><span class="line"><span class="undefined">            height: 170px;</span></span><br><span class="line"><span class="undefined">            overflow-y: scroll;</span></span><br><span class="line"><span class="undefined">            padding: 5px;</span></span><br><span class="line"><span class="undefined">            width: 100%;</span></span><br><span class="line"><span class="undefined">        &#125;</span></span><br><span class="line"><span class="undefined">		#userlist &#123;</span></span><br><span class="line"><span class="undefined">            border: 1px solid #CCCCCC;</span></span><br><span class="line"><span class="undefined">            border-right-color: #999999;</span></span><br><span class="line"><span class="undefined">            border-bottom-color: #999999;</span></span><br><span class="line"><span class="undefined">            height: 170px;</span></span><br><span class="line"><span class="undefined">            overflow-y: scroll;</span></span><br><span class="line"><span class="undefined">            padding: 5px;</span></span><br><span class="line"><span class="undefined">            width: 100%;</span></span><br><span class="line"><span class="undefined">        &#125;</span></span><br><span class="line"><span class="undefined">        p &#123;</span></span><br><span class="line"><span class="undefined">            padding: 0;</span></span><br><span class="line"><span class="undefined">            margin: 0;</span></span><br><span class="line"><span class="undefined">        &#125;</span></span><br><span class="line"><span class="undefined">   </span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"application/javascript"</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="undefined">	   //这里的target就是websocket服务的路径</span></span><br><span class="line"><span class="undefined">	   //对应于@ServerEndpoint("/chatSocket")</span></span><br><span class="line"><span class="xml">	   var target = "ws://localhost:8080/SX2/chatSocket?username="+ username +"&amp;photo=<span class="tag">&lt;<span class="name">%=path%</span>&gt;</span>/image/user/b3.png";</span></span><br><span class="line"><span class="undefined">		window.onload = function() &#123;</span></span><br><span class="line"><span class="undefined">			//进入聊天页面，就打开socket通道;</span></span><br><span class="line"><span class="undefined">			if ('WebSocket' in window) &#123;</span></span><br><span class="line"><span class="undefined">				ws = new WebSocket(target);</span></span><br><span class="line"><span class="undefined">			&#125; else if ('MozWebSocket' in window) &#123;</span></span><br><span class="line"><span class="undefined">				ws = new MozWebSocket(target);</span></span><br><span class="line"><span class="undefined">			&#125; else &#123;</span></span><br><span class="line"><span class="undefined">				alert("WebSocket is not supported by this browser!");</span></span><br><span class="line"><span class="undefined">				return;</span></span><br><span class="line"><span class="undefined">			&#125;</span></span><br><span class="line"><span class="undefined">			//当服务端向浏览器发送消息时会执行此函数</span></span><br><span class="line"><span class="undefined">			ws.onmessage = function(event) &#123;</span></span><br><span class="line"><span class="undefined">				eval("var msg=" + event.data);</span></span><br><span class="line"><span class="undefined">				if(undefined != msg.welCome)&#123;</span></span><br><span class="line"><span class="undefined">					$('#console').append("msg.welCome");</span></span><br><span class="line"><span class="undefined">				&#125;</span></span><br><span class="line"><span class="undefined">				if(undefined != msg.sendMsg)&#123;</span></span><br><span class="line"><span class="undefined">				$('#console').append(msg.sendMsg);</span></span><br><span class="line"><span class="undefined">				&#125;</span></span><br><span class="line"><span class="undefined">				if(undefined != msg.names)&#123;</span></span><br><span class="line"><span class="undefined">					$('#userlist').html("");</span></span><br><span class="line"><span class="undefined">					$(msg.names).each(function()&#123;</span></span><br><span class="line"><span class="undefined">					$('#userlist').append(this);</span></span><br><span class="line"><span class="undefined">					&#125;);</span></span><br><span class="line"><span class="undefined">				&#125;</span></span><br><span class="line"><span class="undefined">			&#125;;</span></span><br><span class="line"><span class="undefined">		&#125;;</span></span><br><span class="line"><span class="undefined">		//发送消息</span></span><br><span class="line"><span class="undefined">		function sendMsg() &#123;</span></span><br><span class="line"><span class="undefined">			var msg = $('#chat').val();</span></span><br><span class="line"><span class="undefined">			if(msg == "" || msg == null)</span></span><br><span class="line"><span class="undefined">				return;</span></span><br><span class="line"><span class="undefined">			ws.send(msg);</span></span><br><span class="line"><span class="undefined">			$('#chat').val("");</span></span><br><span class="line"><span class="undefined">		&#125;</span></span><br><span class="line"><span class="undefined">		document.getElementById('chat').onkeydown = function(event) &#123;</span></span><br><span class="line"><span class="undefined">			if (event.keyCode == 13) &#123;</span></span><br><span class="line"><span class="undefined">				sendMsg();</span></span><br><span class="line"><span class="undefined">			&#125;</span></span><br><span class="line"><span class="undefined">		&#125;;</span></span><br><span class="line"><span class="undefined">   </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">p</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"text"</span> <span class="attr">placeholder</span>=<span class="string">"type and press enter to chat"</span> <span class="attr">id</span>=<span class="string">"chat"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"console-container"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"console"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"console-container"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"userlist"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
-        
-        </div>
-        <footer class="article-footer">
-            <div class="share-container">
-
-
-    <div class="bdsharebuttonbox">
-    <a href="#" class="bds_more" data-cmd="more">分享到：</a>
-    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">QQ空间</a>
-    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">新浪微博</a>
-    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">腾讯微博</a>
-    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">人人网</a>
-    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">微信</a>
-</div>
-<script>
-window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{"bdSize":16}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
-</script>
-<style>
-    .bdshare_popup_box {
-        border-radius: 4px;
-        border: #e1e1e1 solid 1px;
-    }
-    .bdshare-button-style0-16 a,
-    .bdshare-button-style0-16 .bds_more {
-        padding-left: 20px;
-        margin: 6px 10px 6px 0;
-    }
-    .bdshare_dialog_list a,
-    .bdshare_popup_list a,
-    .bdshare_popup_bottom a {
-        font-family: 'Microsoft Yahei';
-    }
-    .bdshare_popup_top {
-        display: none;
-    }
-    .bdshare_popup_bottom {
-        height: auto;
-        padding: 5px;
-    }
-</style>
-
-
-</div>
-
-            
-    
-        <a href="http://www.jinzili.cc/2017/10/07/WebSocket实现即时聊天室/#comments" class="article-comment-link">评论</a>
-    
-
-        </footer>
-    </div>
-    
-</article>
-
-
-
     <nav id="page-nav">
-        <a class="extend prev" rel="prev" href="/page/2/">&laquo; 上一页</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+        <a class="extend prev" rel="prev" href="/page/2/">&laquo; 上一页</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/">下一页 &raquo;</a>
     </nav>
 </section>
             
@@ -1321,6 +1528,44 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
         <h3 class="widget-title">最新文章</h3>
         <div class="widget">
             <ul id="recent-post" class="">
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2018/08/12/大数据学习-反射/" class="thumbnail">
+    
+    
+        <span class="thumbnail-image thumbnail-none"></span>
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/大数据/">大数据</a></p>
+                            <p class="item-title"><a href="/2018/08/12/大数据学习-反射/" class="title">大数据学习 - 反射</a></p>
+                            <p class="item-date"><time datetime="2018-08-12T11:51:57.000Z" itemprop="datePublished">2018-08-12</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2018/08/12/大数据学习-JMS/" class="thumbnail">
+    
+    
+        <span class="thumbnail-image thumbnail-none"></span>
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/大数据/">大数据</a></p>
+                            <p class="item-title"><a href="/2018/08/12/大数据学习-JMS/" class="title">大数据学习 - JMS</a></p>
+                            <p class="item-date"><time datetime="2018-08-12T11:51:12.000Z" itemprop="datePublished">2018-08-12</time></p>
+                        </div>
+                    </li>
                 
                     <li>
                         
@@ -1379,44 +1624,6 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
                         </div>
                     </li>
                 
-                    <li>
-                        
-                        <div class="item-thumbnail">
-                            <a href="/2018/07/22/大数据学习-zookeeper简介/" class="thumbnail">
-    
-    
-        <span class="thumbnail-image thumbnail-none"></span>
-    
-</a>
-
-                        </div>
-                        
-                        <div class="item-inner">
-                            <p class="item-category"><a class="article-category-link" href="/categories/大数据/">大数据</a></p>
-                            <p class="item-title"><a href="/2018/07/22/大数据学习-zookeeper简介/" class="title">大数据学习 - zookeeper简介</a></p>
-                            <p class="item-date"><time datetime="2018-07-22T13:42:11.000Z" itemprop="datePublished">2018-07-22</time></p>
-                        </div>
-                    </li>
-                
-                    <li>
-                        
-                        <div class="item-thumbnail">
-                            <a href="/2018/07/08/Node-a-different-Node-js-version-using-异常/" class="thumbnail">
-    
-    
-        <span class="thumbnail-image thumbnail-none"></span>
-    
-</a>
-
-                        </div>
-                        
-                        <div class="item-inner">
-                            <p class="item-category"><a class="article-category-link" href="/categories/技术杂谈/">技术杂谈</a></p>
-                            <p class="item-title"><a href="/2018/07/08/Node-a-different-Node-js-version-using-异常/" class="title">Node - a different Node.js version using 异常</a></p>
-                            <p class="item-date"><time datetime="2018-07-08T00:54:51.000Z" itemprop="datePublished">2018-07-08</time></p>
-                        </div>
-                    </li>
-                
             </ul>
         </div>
     </div>
@@ -1426,7 +1633,7 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
     <div class="widget-wrap">
         <h3 class="widget-title">分类</h3>
         <div class="widget">
-            <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/DevOps/">DevOps</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java-Framework/">Java Framework</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaBase/">JavaBase</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Cloud/">Spring Cloud</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/大数据/">大数据</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/开发心得/">开发心得</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/随笔/">随笔</a><span class="category-list-count">1</span></li></ul>
+            <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/DevOps/">DevOps</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java-Framework/">Java Framework</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaBase/">JavaBase</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Cloud/">Spring Cloud</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/大数据/">大数据</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/开发心得/">开发心得</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/随笔/">随笔</a><span class="category-list-count">1</span></li></ul>
         </div>
     </div>
 
@@ -1435,7 +1642,7 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
     <div class="widget-wrap">
         <h3 class="widget-title">归档</h3>
         <div class="widget">
-            <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">14</span></li></ul>
+            <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">14</span></li></ul>
         </div>
     </div>
 
@@ -1444,7 +1651,7 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
     <div class="widget-wrap">
         <h3 class="widget-title">标签</h3>
         <div class="widget">
-            <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deep-Clone/">Deep Clone</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Eureka/">Eureka</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Feign/">Feign</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Http/">Http</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JavaUtils/">JavaUtils</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Mybatis/">Mybatis</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ribbon/">Ribbon</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringCloud/">SpringCloud</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringDataJPA/">SpringDataJPA</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringMVC/">SpringMVC</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WebSocket/">WebSocket</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/centos7/">centos7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/dashboard/">dashboard</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/docker/">docker</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/js/">js</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/k8s/">k8s</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubeadm/">kubeadm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubernetes/">kubernetes</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/node/">node</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/online/">online</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/quartz/">quartz</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/synchronized/">synchronized</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/">web</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/zookeeper/">zookeeper</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/下载文件/">下载文件</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/原子性/">原子性</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/多线程/">多线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/大数据/">大数据</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/并发包/">并发包</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/开发心得/">开发心得</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/心情/">心情</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/类加载/">类加载</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/聊天室/">聊天室</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/跨域/">跨域</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/随笔/">随笔</a><span class="tag-list-count">1</span></li></ul>
+            <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deep-Clone/">Deep Clone</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Eureka/">Eureka</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Feign/">Feign</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Http/">Http</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JMS/">JMS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JavaUtils/">JavaUtils</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Mybatis/">Mybatis</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ribbon/">Ribbon</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringCloud/">SpringCloud</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringDataJPA/">SpringDataJPA</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringMVC/">SpringMVC</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WebSocket/">WebSocket</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/centos7/">centos7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/dashboard/">dashboard</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/docker/">docker</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/js/">js</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/k8s/">k8s</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubeadm/">kubeadm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubernetes/">kubernetes</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/node/">node</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/online/">online</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/quartz/">quartz</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/synchronized/">synchronized</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/">web</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/zookeeper/">zookeeper</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/下载文件/">下载文件</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/原子性/">原子性</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/反射/">反射</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/多线程/">多线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/大数据/">大数据</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/并发包/">并发包</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/开发心得/">开发心得</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/心情/">心情</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/类加载/">类加载</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/聊天室/">聊天室</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/跨域/">跨域</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/随笔/">随笔</a><span class="tag-list-count">1</span></li></ul>
         </div>
     </div>
 
@@ -1453,7 +1660,7 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
     <div class="widget-wrap">
         <h3 class="widget-title">标签云</h3>
         <div class="widget tagcloud">
-            <a href="/tags/Deep-Clone/" style="font-size: 10px;">Deep Clone</a> <a href="/tags/Eureka/" style="font-size: 10px;">Eureka</a> <a href="/tags/Feign/" style="font-size: 10px;">Feign</a> <a href="/tags/Hibernate/" style="font-size: 10px;">Hibernate</a> <a href="/tags/Http/" style="font-size: 10px;">Http</a> <a href="/tags/JavaUtils/" style="font-size: 10px;">JavaUtils</a> <a href="/tags/Mybatis/" style="font-size: 10px;">Mybatis</a> <a href="/tags/Ribbon/" style="font-size: 10px;">Ribbon</a> <a href="/tags/SpringCloud/" style="font-size: 10px;">SpringCloud</a> <a href="/tags/SpringDataJPA/" style="font-size: 10px;">SpringDataJPA</a> <a href="/tags/SpringMVC/" style="font-size: 13.33px;">SpringMVC</a> <a href="/tags/WebSocket/" style="font-size: 10px;">WebSocket</a> <a href="/tags/centos7/" style="font-size: 10px;">centos7</a> <a href="/tags/dashboard/" style="font-size: 10px;">dashboard</a> <a href="/tags/docker/" style="font-size: 13.33px;">docker</a> <a href="/tags/js/" style="font-size: 10px;">js</a> <a href="/tags/k8s/" style="font-size: 13.33px;">k8s</a> <a href="/tags/kubeadm/" style="font-size: 10px;">kubeadm</a> <a href="/tags/kubernetes/" style="font-size: 16.67px;">kubernetes</a> <a href="/tags/node/" style="font-size: 10px;">node</a> <a href="/tags/online/" style="font-size: 10px;">online</a> <a href="/tags/quartz/" style="font-size: 16.67px;">quartz</a> <a href="/tags/synchronized/" style="font-size: 10px;">synchronized</a> <a href="/tags/web/" style="font-size: 13.33px;">web</a> <a href="/tags/zookeeper/" style="font-size: 13.33px;">zookeeper</a> <a href="/tags/下载文件/" style="font-size: 10px;">下载文件</a> <a href="/tags/原子性/" style="font-size: 10px;">原子性</a> <a href="/tags/多线程/" style="font-size: 10px;">多线程</a> <a href="/tags/大数据/" style="font-size: 20px;">大数据</a> <a href="/tags/并发包/" style="font-size: 10px;">并发包</a> <a href="/tags/开发心得/" style="font-size: 10px;">开发心得</a> <a href="/tags/心情/" style="font-size: 10px;">心情</a> <a href="/tags/类加载/" style="font-size: 13.33px;">类加载</a> <a href="/tags/聊天室/" style="font-size: 10px;">聊天室</a> <a href="/tags/跨域/" style="font-size: 10px;">跨域</a> <a href="/tags/锁/" style="font-size: 10px;">锁</a> <a href="/tags/随笔/" style="font-size: 10px;">随笔</a>
+            <a href="/tags/Deep-Clone/" style="font-size: 10px;">Deep Clone</a> <a href="/tags/Eureka/" style="font-size: 10px;">Eureka</a> <a href="/tags/Feign/" style="font-size: 10px;">Feign</a> <a href="/tags/Hibernate/" style="font-size: 10px;">Hibernate</a> <a href="/tags/Http/" style="font-size: 10px;">Http</a> <a href="/tags/JMS/" style="font-size: 10px;">JMS</a> <a href="/tags/JavaUtils/" style="font-size: 10px;">JavaUtils</a> <a href="/tags/Mybatis/" style="font-size: 10px;">Mybatis</a> <a href="/tags/Ribbon/" style="font-size: 10px;">Ribbon</a> <a href="/tags/SpringCloud/" style="font-size: 10px;">SpringCloud</a> <a href="/tags/SpringDataJPA/" style="font-size: 10px;">SpringDataJPA</a> <a href="/tags/SpringMVC/" style="font-size: 13.33px;">SpringMVC</a> <a href="/tags/WebSocket/" style="font-size: 10px;">WebSocket</a> <a href="/tags/centos7/" style="font-size: 10px;">centos7</a> <a href="/tags/dashboard/" style="font-size: 10px;">dashboard</a> <a href="/tags/docker/" style="font-size: 13.33px;">docker</a> <a href="/tags/js/" style="font-size: 10px;">js</a> <a href="/tags/k8s/" style="font-size: 13.33px;">k8s</a> <a href="/tags/kubeadm/" style="font-size: 10px;">kubeadm</a> <a href="/tags/kubernetes/" style="font-size: 16.67px;">kubernetes</a> <a href="/tags/node/" style="font-size: 10px;">node</a> <a href="/tags/online/" style="font-size: 10px;">online</a> <a href="/tags/quartz/" style="font-size: 16.67px;">quartz</a> <a href="/tags/synchronized/" style="font-size: 10px;">synchronized</a> <a href="/tags/web/" style="font-size: 13.33px;">web</a> <a href="/tags/zookeeper/" style="font-size: 13.33px;">zookeeper</a> <a href="/tags/下载文件/" style="font-size: 10px;">下载文件</a> <a href="/tags/原子性/" style="font-size: 10px;">原子性</a> <a href="/tags/反射/" style="font-size: 10px;">反射</a> <a href="/tags/多线程/" style="font-size: 10px;">多线程</a> <a href="/tags/大数据/" style="font-size: 20px;">大数据</a> <a href="/tags/并发包/" style="font-size: 10px;">并发包</a> <a href="/tags/开发心得/" style="font-size: 10px;">开发心得</a> <a href="/tags/心情/" style="font-size: 10px;">心情</a> <a href="/tags/类加载/" style="font-size: 13.33px;">类加载</a> <a href="/tags/聊天室/" style="font-size: 10px;">聊天室</a> <a href="/tags/跨域/" style="font-size: 10px;">跨域</a> <a href="/tags/锁/" style="font-size: 10px;">锁</a> <a href="/tags/随笔/" style="font-size: 10px;">随笔</a>
         </div>
     </div>
 
