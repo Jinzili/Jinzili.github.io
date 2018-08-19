@@ -146,11 +146,11 @@
         </div>
         <div class="article-info profile-block">
             <div class="article-info-block">
-                31
+                34
                 <span>文章</span>
             </div>
             <div class="article-info-block">
-                39
+                43
                 <span>标签</span>
             </div>
         </div>
@@ -193,6 +193,409 @@
 
             
             <section id="main">
+    <article id="post-Java类加载机制(二)" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+    
+        <h1 itemprop="name">
+            <a class="article-title" href="/2018/07/08/Java类加载机制(二)/">Java类加载机制(二)</a>
+        </h1>
+    
+
+                
+                    <div class="article-meta">
+                        
+    <div class="article-date">
+        <i class="fas fa-calendar-alt"></i>
+        <a href="/2018/07/08/Java类加载机制(二)/">
+            <time datetime="2018-07-08T00:52:42.000Z" itemprop="datePublished">2018-07-08</time>
+        </a>
+    </div>
+
+
+                        
+    <div class="article-category">
+    	<i class="fas fa-folder"></i>
+        <a class="article-category-link" href="/categories/JavaBase/">JavaBase</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/类加载/">类加载</a>
+    </div>
+
+                    </div>
+                
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+            
+            <h2 id="类加载"><a href="#类加载" class="headerlink" title="类加载"></a>类加载</h2><p>先来看个栗子🌰：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span></span>&#123;</span><br><span class="line">    ClassLoader loader = Thread.currentThread().getContextClassLoader();</span><br><span class="line">    System.out.println(loader);</span><br><span class="line">    System.out.println(loader.getParent());</span><br><span class="line">    System.out.println(loader.getParent().getParent());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sun.misc.Launcher$AppClassLoader@<span class="number">18</span>b4aac2</span><br><span class="line">sun.misc.Launcher$ExtClassLoader@<span class="number">5f</span>5a92bb</span><br><span class="line"><span class="keyword">null</span></span><br></pre></td></tr></table></figure>
+<p>可以看出，没有获取到ExtClassLoader的父Loader，原因是Bootstrap Loader(引导类加载器)是用C语言实现的，找不到一个确定的返回父Loader的方式，于是返回为null。</p>
+<p>站在Java虚拟机的角度来说，只存在两种不同的类加载器：</p>
+<ul>
+<li>启动类加载器：使用C++实现（仅限于Hotspot），是虚拟机的一部分</li>
+<li>所有其他类加载器：这些加载器都由Java语言实现，独立于虚拟机之外，并且全部继承自抽象类java.lang.ClassLoader，这些类加载器需要由启动类加载器加载到内存中之后才能去加载其他的类。</li>
+</ul>
+<p>站在开发人员的角度来说，大致可分为三类类加载器：</p>
+<ul>
+<li>启动类加载器：Bootstrap Loader，负责加载存放在JDK/jre/lib下，或被-Xbootclasspath参数指定的路径中，并且能被虚拟机识别的类库（如rt.jar，所有的java.*开头的类均被BootstrapClassLaoder加载）。启动类加载器是无法被Java程序直接引用的。</li>
+<li>扩展类加载器：Extension ClassLoader，该加载器由sun.misc.Launcher$ExtClassLoader实现，它负责加载JDK/jre/lib/ext目录中，或者由java.ext.dirs系统变量指定的路径中的所有类库（如javax.*开头的类），开发人员可以直接使用扩展类加载器。</li>
+<li>应用程序类加载器：Application ClassLoader，该类加载器由sun.misc.Launcher$AppClassLoader来实现，它负责加载用户类路径所指定的类，开发人员可以直接使用该类加载器，如果应用程序中没有自定义过自己的类加载器，一般情况下这个就是程序中默认的类加载器。</li>
+</ul>
+<p>如果有必要，还可以假如自定义的类加载器。</p>
+<p>ExtClassLoader和APPClassLoader并不是继承关系，它们都继承同一个类URLClassLoader。</p>
+<blockquote>
+<p>JVM类加载机制：</p>
+<ul>
+<li>全盘负责：当一个类加载器负责加载某个Class时，该Class所依赖的和引用的其他Class也将由该类加载器负责载入，除非显示使用另外一个类加载器来载入</li>
+<li>父类委托：先让父类加载器试图加载该类，只有在父类加载器无法加载该类时才尝试从自己的类路径加载该类</li>
+<li>缓存机制：缓存机制会保证所有加载过的Class都会被缓存，当程序中需要使用某个Class时，类加载器先从缓存区寻找该Class，只有缓存区不存在，系统才会读取该类对应的二进制数据，并将其转换成Class对象，存入缓存区。这就是为什么修改了Class后，必须重启JVM，程序的修改才会生效</li>
+</ul>
+</blockquote>
+<p><img src="https://cloud.gemii.cc/lizcloud/fs/noauth/media/5ac4463d1e6d8a0037546f68" alt="image"></p>
+<h2 id="双亲委派机制"><a href="#双亲委派机制" class="headerlink" title="双亲委派机制"></a>双亲委派机制</h2><blockquote>
+<p>为什么需要双亲委派机制？</p>
+<p>先说明一下，jvm判断两个类相同的前提是这两个类都是同一个加载器进行加载的，如果使用不同的类加载器进行加载同一个类，那在jvm中会认为它们是不同的。所以如果没有双亲委派机制，如果我们在rt.jar中随便找一个类，如java.util.HashMap，那么我们同样也可以写一个一样的类，也叫java.util.HashMap存放在我们自己的路径下，那么这两个类采用的是不同的类加载器，程序中就会出现两个不同的HashMap类。总结来说，1、系统类防止内存中出现多芬同样的字节码 2、保证Java程序安全稳定运行</p>
+</blockquote>
+<p>双亲委派的工作流程是：如果一个类加载器收到了类加载的请求，它首先不会自己去尝试加载这个类，而是把请求委托给父加载器去完成，依次向上，所以所有的类加载请求最终都应该被传递到顶层的启动类加载器中，只有当父加载器在它的搜索范围中没有找到所需的类时，即无法完成该加载，子加载器才会尝试自己去加载该类。</p>
+
+        
+        </div>
+        <footer class="article-footer">
+            <div class="share-container">
+
+
+    <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">分享到：</a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">QQ空间</a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">新浪微博</a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">腾讯微博</a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">人人网</a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">微信</a>
+</div>
+<script>
+window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{"bdSize":16}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+<style>
+    .bdshare_popup_box {
+        border-radius: 4px;
+        border: #e1e1e1 solid 1px;
+    }
+    .bdshare-button-style0-16 a,
+    .bdshare-button-style0-16 .bds_more {
+        padding-left: 20px;
+        margin: 6px 10px 6px 0;
+    }
+    .bdshare_dialog_list a,
+    .bdshare_popup_list a,
+    .bdshare_popup_bottom a {
+        font-family: 'Microsoft Yahei';
+    }
+    .bdshare_popup_top {
+        display: none;
+    }
+    .bdshare_popup_bottom {
+        height: auto;
+        padding: 5px;
+    }
+</style>
+
+
+</div>
+
+            
+    
+        <a href="http://www.jinzili.cc/2018/07/08/Java类加载机制(二)/#comments" class="article-comment-link">评论</a>
+    
+
+        </footer>
+    </div>
+    
+</article>
+
+
+
+    <article id="post-Java类加载机制(一)" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+    
+        <h1 itemprop="name">
+            <a class="article-title" href="/2018/06/30/Java类加载机制(一)/">Java类加载机制</a>
+        </h1>
+    
+
+                
+                    <div class="article-meta">
+                        
+    <div class="article-date">
+        <i class="fas fa-calendar-alt"></i>
+        <a href="/2018/06/30/Java类加载机制(一)/">
+            <time datetime="2018-06-30T02:49:31.000Z" itemprop="datePublished">2018-06-30</time>
+        </a>
+    </div>
+
+
+                        
+    <div class="article-category">
+    	<i class="fas fa-folder"></i>
+        <a class="article-category-link" href="/categories/JavaBase/">JavaBase</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/类加载/">类加载</a>
+    </div>
+
+                    </div>
+                
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+            
+            <h2 id="类的加载"><a href="#类的加载" class="headerlink" title="类的加载"></a>类的加载</h2><p>Java类的加载指的是将类的.class文件中的二进制数据读入到内存中，将其放在运行时数据区的方法区内，然后在堆区创建一个java.lang.Class对象，用来封装类在方法区内的数据结构。类的加载的最终产品是位于堆区中的Class对象，Class对象封装了类在方法区内的数据结构，并且向外部提供了访问方法区内的数据结构的接口。</p>
+<h2 id="类的生命周期"><a href="#类的生命周期" class="headerlink" title="类的生命周期"></a>类的生命周期</h2><p><img src="https://cloud.gemii.cc/lizcloud/fs/noauth/media/5ac34bc01e6d8a0037546f1b" alt="image"><br>类从被加载到虚拟机内存中开始，到卸载出内存为止，它的生命周期包括：加载、验证、准备、解析、初始化、使用和卸载7个阶段。其中验证、准备、解析统称为连接。<br>加载、验证、准备、初始化和卸载这5个阶段的顺序是确定的，类的加载过程必须按照这种顺序按部就班的开始，而解析则不一定，它在某些情况下可以在初始化阶段之后再开始，这是为了支持Java的运行时绑定。</p>
+<h3 id="加载"><a href="#加载" class="headerlink" title="加载"></a>加载</h3><p>加载阶段，虚拟机需要完成以下3件事情：</p>
+<ul>
+<li>通过一个类的全限定名来获取定义此类的二进制字节流</li>
+</ul>
+<blockquote>
+<p>加载.class文件的方式</p>
+<ol>
+<li>从本地系统中直接加载</li>
+<li>通过网络下载</li>
+<li>从zip，jar等归档文件中加载.class文件</li>
+<li>从专有数据库中提取</li>
+<li>将Java源文件动态编译为.class文件</li>
+</ol>
+</blockquote>
+<ul>
+<li>将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构</li>
+<li>在内存中生成一个代表这个类的java.lang.Class对象，作为方法去这个类的各种数据的访问入口</li>
+</ul>
+<p>加载和连接阶段的部分内容是交叉进行的，加载阶段尚未完成，连接阶段可能已经开始（如一部分字节码文件格式验证），但是这些动作仍然属于连接阶段的内容，这两个阶段的开始时间仍然保持着固定的先后顺序。</p>
+<p>加载阶段既可以使用系统提供的类加载器来完成加载，也可以自定义自己的类加载器。</p>
+<p>加载阶段完成后，虚拟机外部的二进制字节流就按照虚拟机所需的格式存储在方法区之中，而且在Java堆中也创建一个java.lang.Class对象，这样便可以通过该对象访问方法区中的这些数据。</p>
+<h3 id="连接"><a href="#连接" class="headerlink" title="连接"></a>连接</h3><h4 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h4><p>验证是连接阶段的第一步，这一步的目的是为了确保Class文件的字节流中包含的信息符合当前虚拟机的要求，并且不会危害虚拟机自身的安全。</p>
+<p>主要完成4个检验动作：</p>
+<ul>
+<li>文件格式验证：验证自己留是否符合Class文件格式的规范，例如是否以0xCAFABABE开头（传说中的魔数）、主次版本号是否在当前虚拟机的处理范围之内、常量池中的敞亮是否有不被支持的类型。</li>
+<li>元数据验证：对字节码描述的信息进行语义分析，以保证其描述的信息符合Java语言的规范；例如这个类是否有父类（除了java.lang.Object）</li>
+<li>字节码验证：通过数据流和控制流分析，确定程序语义是合法的、符合逻辑的</li>
+<li>符号引用验证：确保解析动作能正确执行</li>
+</ul>
+<p>验证阶段是非常重要的，但不是必须的，它对程序运行期没有影响，如果所引用的类经过反复验证，那么可以考虑采用-Xverifynone参数来关闭大部分的类验证措施，以缩短虚拟机类加载的时间。</p>
+<h4 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h4><p>为类的静态变量分配内存，并将其初始化为默认值，正式为类变量分配内存并设置类变量初始值的阶段，这些内存都将在方法区中分配。</p>
+<p>有几点需要注意：</p>
+<ul>
+<li>这时候进行内存分配的仅包括类变量（static），不包括实例变量，实例变量将在对象实例化时随着对象一块分配在Java堆中。</li>
+<li>这是所设置的初始值通常情况下是数据类型默认的零值（如0、0L、null、false等），而不是代码中被显示赋予的值。</li>
+</ul>
+<p>假如一个类变量的定义为：<br>public static int value = 7<br>那么在准备阶段过后value的初始值为0，而不是7，这时候还未执行任何Java方法，把value赋值为7的动作将在初始化阶段才会执行。特殊情况：加载final关键词后，即当类字段的字段属性是ConstantValue时，会在准备阶段初始化为指定的值，所以标注final后，value的值在此阶段初始化为7而不是0。</p>
+<h4 id="解析"><a href="#解析" class="headerlink" title="解析"></a>解析</h4><p>解析阶段是虚拟机将常量池内的符号引用替换为直接引用的过程，解析动作主要针对类或接口、字段、类方法、接口方法、方法类型、方法句柄和调用点限定符7类符号引用进行。符号引用就是一组符号来描述模板，可以是任何字面量。<br>直接引用就是直接指向模板的指针、相对偏移量或一个简洁定位到目标的句柄。</p>
+<h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h3><p>为类的静态变量赋予正确的初始值，JVM负责对类进行初始化，主要对类变量进行初始化。对类变量进行初始值设定有两种方式：</p>
+<ul>
+<li>声明类变量是指定初始值</li>
+<li>使用静态代码块为类变量指定初始值</li>
+</ul>
+<p>JVM初始化步骤：</p>
+<ol>
+<li>假如这个类还没有被加载和连接，则程序先加载并连接该类</li>
+<li>假如该类的直接父类还没有被初始化，则先初始化其直接父类</li>
+<li>假如类中有初始化语句，则系统依次执行这些初始化语句</li>
+</ol>
+<p>类初始化时机（只有当对类的主动使用的时候才会导致类的初始化）：</p>
+<ul>
+<li>创建类的实例，new Example()</li>
+<li>访问某个类或接口的静态变量，或者对该静态变量进行赋值</li>
+<li>调用类的静态方法</li>
+<li>反射（Class.forName(“…”)）</li>
+<li>初始化某个类的子类，则其父类也会被初始化</li>
+<li>Java虚拟机启动时被标明为启动类的类，直接使用java.exe命令来运行某个主类</li>
+</ul>
+
+        
+        </div>
+        <footer class="article-footer">
+            <div class="share-container">
+
+
+    <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">分享到：</a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">QQ空间</a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">新浪微博</a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">腾讯微博</a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">人人网</a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">微信</a>
+</div>
+<script>
+window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{"bdSize":16}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+<style>
+    .bdshare_popup_box {
+        border-radius: 4px;
+        border: #e1e1e1 solid 1px;
+    }
+    .bdshare-button-style0-16 a,
+    .bdshare-button-style0-16 .bds_more {
+        padding-left: 20px;
+        margin: 6px 10px 6px 0;
+    }
+    .bdshare_dialog_list a,
+    .bdshare_popup_list a,
+    .bdshare_popup_bottom a {
+        font-family: 'Microsoft Yahei';
+    }
+    .bdshare_popup_top {
+        display: none;
+    }
+    .bdshare_popup_bottom {
+        height: auto;
+        padding: 5px;
+    }
+</style>
+
+
+</div>
+
+            
+    
+        <a href="http://www.jinzili.cc/2018/06/30/Java类加载机制(一)/#comments" class="article-comment-link">评论</a>
+    
+
+        </footer>
+    </div>
+    
+</article>
+
+
+
+    <article id="post-get-set原子性引发出的思考" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+    
+        <h1 itemprop="name">
+            <a class="article-title" href="/2018/06/14/get-set原子性引发出的思考/">get set原子性引发出的思考</a>
+        </h1>
+    
+
+                
+                    <div class="article-meta">
+                        
+    <div class="article-date">
+        <i class="fas fa-calendar-alt"></i>
+        <a href="/2018/06/14/get-set原子性引发出的思考/">
+            <time datetime="2018-06-14T02:07:08.000Z" itemprop="datePublished">2018-06-14</time>
+        </a>
+    </div>
+
+
+                        
+    <div class="article-category">
+    	<i class="fas fa-folder"></i>
+        <a class="article-category-link" href="/categories/技术杂谈/">技术杂谈</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/原子性/">原子性</a>
+    </div>
+
+                    </div>
+                
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+            
+            <p>经常在业务中碰到对变量先get变量判断是否为blank，如果不为blank直接返回，如果为blank需先获取设置到变量，在返回，伪代码如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> String <span class="title">getToken</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// select</span></span><br><span class="line">    String accessToken = redisUtils.get(key);</span><br><span class="line">    <span class="keyword">if</span>(StringUtils.isBlank(accessToken))&#123;</span><br><span class="line">        <span class="comment">// get set</span></span><br><span class="line">        accessToken = HTTPUtils.doGet(url);</span><br><span class="line">        redisUtils.setEx(key, accessToken, <span class="number">7000</span>, TimeUtils.SECONDS);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> accessToken;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里我们就能发现问题了，我们操作的redis中的key相当于全局变量，如果此时不幸同一时刻多个线程同时获取accessToken，更不幸的是最新获取的accessToken才是有效的，那么有很大的几率前一个线程刚获取到accessToken开始表演的时候，被通知accessToken已失效导致整段垮掉。所以怎样保证线程安全的同时还能保证高性能呢？这期间也思考了多种方法：</p>
+<h3 id="简单粗暴型"><a href="#简单粗暴型" class="headerlink" title="简单粗暴型"></a>简单粗暴型</h3><p>直接对getToken整个方法进行同步</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> syncronzied String <span class="title">getToken</span><span class="params">()</span></span>&#123;...&#125;</span><br></pre></td></tr></table></figure>
+<p>这个方法完全解决了全局变量线程安全的问题，select-&gt;get-&gt;set 将这一整个操作保证原子性，但是劣处也是显而易见的，这里的锁颗粒度太大，导致所有线程必须乖乖的一个一个getToken, 性能不用说也知道极差，有没有一种方法可以保证多线程的读，但是只有一个线程能写呢？</p>
+<h3 id="只锁get-set"><a href="#只锁get-set" class="headerlink" title="只锁get set"></a>只锁get set</h3><p>我们来改变一下锁的位置:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">byte</span>[] mutex = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">0</span>];</span><br><span class="line"><span class="function"><span class="keyword">private</span> String <span class="title">getToken</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// select</span></span><br><span class="line">    String accessToken = redisUtils.get(key);</span><br><span class="line">    <span class="keyword">if</span>(StringUtils.isBlank(accessToken))&#123;</span><br><span class="line">        syncronized(mutex)&#123;</span><br><span class="line">            <span class="comment">// get set</span></span><br><span class="line">            accessToken = HTTPUtils.doGet(url);</span><br><span class="line">            redisUtils.setEx(key, accessToken, <span class="number">7000</span>, TimeUtils.SECONDS);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> accessToken;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当select accessToken为blank的时候才会进入同步代码块 get set，乍一看可能没问题了，其实当同一时刻多个线程访问的时候还是会有问题，比如多个线程已经进行了blank判断，都在等待mutext的锁，导致前一个得到mutex锁的线程获取到的accessToken因为下一个线程再次get set accessToken而失效。</p>
+<h3 id="双重检查"><a href="#双重检查" class="headerlink" title="双重检查"></a>双重检查</h3><p>为了解决上一种方法碰到的问题，我们可以在获取到锁时再次进行确认：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">byte</span>[] mutex = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">0</span>];</span><br><span class="line"><span class="function"><span class="keyword">private</span> String <span class="title">getToken</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="comment">// select</span></span><br><span class="line">    String accessToken = redisUtils.get(key);</span><br><span class="line">    <span class="keyword">if</span>(StringUtils.isBlank(accessToken))&#123;</span><br><span class="line">        syncronized(mutex)&#123;</span><br><span class="line">            <span class="comment">// 再次确认</span></span><br><span class="line">            accessToken = redisUtils.get(key);</span><br><span class="line">            <span class="keyword">if</span>(StringUtils.isBlank(accessToken))&#123;</span><br><span class="line">                <span class="comment">// get set</span></span><br><span class="line">                accessToken = HTTPUtils.doGet(url);</span><br><span class="line">                redisUtils.setEx(key, accessToken, <span class="number">7000</span>, TimeUtils.SECONDS);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> accessToken;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此时既保证了线程安全的同时，又尽可能的减少同步代码提升性能。</p>
+
+        
+        </div>
+        <footer class="article-footer">
+            <div class="share-container">
+
+
+    <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">分享到：</a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">QQ空间</a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">新浪微博</a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">腾讯微博</a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">人人网</a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">微信</a>
+</div>
+<script>
+window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{"bdSize":16}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+<style>
+    .bdshare_popup_box {
+        border-radius: 4px;
+        border: #e1e1e1 solid 1px;
+    }
+    .bdshare-button-style0-16 a,
+    .bdshare-button-style0-16 .bds_more {
+        padding-left: 20px;
+        margin: 6px 10px 6px 0;
+    }
+    .bdshare_dialog_list a,
+    .bdshare_popup_list a,
+    .bdshare_popup_bottom a {
+        font-family: 'Microsoft Yahei';
+    }
+    .bdshare_popup_top {
+        display: none;
+    }
+    .bdshare_popup_bottom {
+        height: auto;
+        padding: 5px;
+    }
+</style>
+
+
+</div>
+
+            
+    
+        <a href="http://www.jinzili.cc/2018/06/14/get-set原子性引发出的思考/#comments" class="article-comment-link">评论</a>
+    
+
+        </footer>
+    </div>
+    
+</article>
+
+
+
     <article id="post-Hibernate-no-longer-referenced异常" class="article article-type-post" itemscope itemprop="blogPost">
     <div class="article-inner">
         
@@ -1003,356 +1406,6 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
 
 
 
-    <article id="post-Spring-Cloud-Eureka" class="article article-type-post" itemscope itemprop="blogPost">
-    <div class="article-inner">
-        
-        
-            <header class="article-header">
-                
-    
-        <h1 itemprop="name">
-            <a class="article-title" href="/2017/10/25/Spring-Cloud-Eureka/">Spring Cloud - Eureka</a>
-        </h1>
-    
-
-                
-                    <div class="article-meta">
-                        
-    <div class="article-date">
-        <i class="fas fa-calendar-alt"></i>
-        <a href="/2017/10/25/Spring-Cloud-Eureka/">
-            <time datetime="2017-10-25T10:31:10.000Z" itemprop="datePublished">2017-10-25</time>
-        </a>
-    </div>
-
-
-                        
-    <div class="article-category">
-    	<i class="fas fa-folder"></i>
-        <a class="article-category-link" href="/categories/Spring-Cloud/">Spring Cloud</a>
-    </div>
-
-                        
-    <div class="article-tag">
-        <i class="fas fa-tag"></i>
-        <a class="tag-link" href="/tags/Eureka/">Eureka</a>, <a class="tag-link" href="/tags/SpringCloud/">SpringCloud</a>
-    </div>
-
-                    </div>
-                
-            </header>
-        
-        
-        <div class="article-entry" itemprop="articleBody">
-        
-            
-            <h1 id="Eureka"><a href="#Eureka" class="headerlink" title="Eureka"></a>Eureka</h1><p>在Spring Cloud体系中，eureka承担着服务注册与发现的任务，在整个微服务架构中起着整合作用。eureka的一些概念：</p>
-<h2 id="服务提供者"><a href="#服务提供者" class="headerlink" title="服务提供者"></a>服务提供者</h2><p>provider，指一个将自身的功能接口暴露出来的应用。</p>
-<h2 id="服务消费者"><a href="#服务消费者" class="headerlink" title="服务消费者"></a>服务消费者</h2><p>consumer，指需要借助provider提供的功能完成自身业务的应用。</p>
-<h2 id="服务注册"><a href="#服务注册" class="headerlink" title="服务注册"></a>服务注册</h2><p>当provider应用启动时，会将自身的元数据，比如IP地址，端口，应用名等注册到eureka server中。</p>
-<h2 id="服务续约"><a href="#服务续约" class="headerlink" title="服务续约"></a>服务续约</h2><p>provider每搁固定的时间段(默认30秒)，向eureka server汇报一次自身状况，如果eureka server在固定的时间段(默认90秒)内没有收到某一provider的服务续约的请求，将会把这个provider实例从服务列表中剔除。</p>
-<h2 id="获取注册信息"><a href="#获取注册信息" class="headerlink" title="获取注册信息"></a>获取注册信息</h2><p>consumer应用会定时从eureka server获取服务注册列表信息以供自身进行远程调用，consumer应用默认每30秒会更新一次注册列表信息，默认eureka server和consumer应用使用压缩的json进行交互。</p>
-<h2 id="服务下线"><a href="#服务下线" class="headerlink" title="服务下线"></a>服务下线</h2><p>provider应用关闭时，会向eureka server发送下线请求，eureka server收到请求后会将此provider实例信息从服务注册列表中剔除。</p>
-<h1 id="Eureka-Server"><a href="#Eureka-Server" class="headerlink" title="Eureka Server"></a>Eureka Server</h1><h2 id="添加eureka-server依赖"><a href="#添加eureka-server依赖" class="headerlink" title="添加eureka server依赖"></a>添加eureka server依赖</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.cloud<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-cloud-starter-eureka-server<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<h2 id="application-yml-配置"><a href="#application-yml-配置" class="headerlink" title="application.yml 配置"></a>application.yml 配置</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">server:</span><br><span class="line">  port: 8761 # 服务端口</span><br><span class="line"></span><br><span class="line">spring:</span><br><span class="line">  application:</span><br><span class="line">    name: eurekaServer # 服务名</span><br><span class="line">eureka:</span><br><span class="line">  environment: devlopment # eureka server环境</span><br><span class="line">  instance:</span><br><span class="line">    lease-renewal-interval-in-seconds: 10 # 发送心跳的间隔时间</span><br><span class="line">    lease-expiration-duration-in-seconds: 30 # 若这个时间段没收到心跳则移除该instance</span><br><span class="line">    prefer-ip-address: true # 实例名称显示IP配置</span><br><span class="line"></span><br><span class="line">  client:</span><br><span class="line">    serviceUrl:</span><br><span class="line">      defaultZone: http://localhost:8761/eureka/ # eureka server的地址</span><br><span class="line">    register-with-eureka: true # 此服务是否注册到eureka server上</span><br><span class="line">  server:</span><br><span class="line">    enable-self-preservation: false # 关闭自我保护模式</span><br><span class="line">    eviction-interval-timer-in-ms: 4000 # 扫描失效服务间隔(单位ms, 默认是60 * 1000)</span><br><span class="line">    wait-time-in-ms-when-sync-empty: 0</span><br><span class="line"></span><br><span class="line">debug: true # debug 模式</span><br></pre></td></tr></table></figure>
-<h2 id="加入-EnableEurekaServer注解"><a href="#加入-EnableEurekaServer注解" class="headerlink" title="加入@EnableEurekaServer注解"></a>加入@EnableEurekaServer注解</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="meta">@EnableEurekaServer</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">EurekaApplication</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(EurekaApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>只需这简单的配置，就已经搭建了一台eureka server应用。</p>
-<h1 id="Eureka-Client"><a href="#Eureka-Client" class="headerlink" title="Eureka Client"></a>Eureka Client</h1><h2 id="添加eureka依赖"><a href="#添加eureka依赖" class="headerlink" title="添加eureka依赖"></a>添加eureka依赖</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.cloud<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-cloud-starter-eureka<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<h2 id="application-yml-配置-1"><a href="#application-yml-配置-1" class="headerlink" title="application.yml 配置"></a>application.yml 配置</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">server:</span><br><span class="line">  port: 8080</span><br><span class="line">debug: true</span><br><span class="line">eureka:</span><br><span class="line">  client:</span><br><span class="line">    service-url:</span><br><span class="line">      defaultZone: http://localhost:8761/eureka/</span><br><span class="line">  instance:</span><br><span class="line">    prefer-ip-address: true   #将自己的IP注册到eureka server上,如不配置则表示注册微服务所在操作系统的hostname到eureka server</span><br></pre></td></tr></table></figure>
-<h2 id="加入-EnableDiscoveryClient注解"><a href="#加入-EnableDiscoveryClient注解" class="headerlink" title="加入@EnableDiscoveryClient注解"></a>加入@EnableDiscoveryClient注解</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * TODO</span></span><br><span class="line"><span class="comment"> * Created by jinzili on 09/06/2017.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="meta">@EnableDiscoveryClient</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProviderUserApplication</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(ProviderUserApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>现在我们已经搭建好了一台Eureka Server 和一台provider，访问<a href="http://localhost:8761看看效果！" target="_blank" rel="noopener">http://localhost:8761看看效果！</a><br><img src="https://static.oschina.net/uploads/space/2017/1025/182114_6w0z_3559870.png" alt="image"></p>
-<p>perfect!</p>
-<p>我们的两个服务已经注册到了Eureka Server上，上图的红字是因为我们在Eureka Server服务的application.yml配置了eureka.server.enable-self-preservation: false 关闭了自我保护模式，推荐在开发中我们使用此配置，可以及时刷新服务的最新状态，但是切记在生产环境使用要开启自我保护模式。</p>
-
-        
-        </div>
-        <footer class="article-footer">
-            <div class="share-container">
-
-
-    <div class="bdsharebuttonbox">
-    <a href="#" class="bds_more" data-cmd="more">分享到：</a>
-    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">QQ空间</a>
-    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">新浪微博</a>
-    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">腾讯微博</a>
-    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">人人网</a>
-    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">微信</a>
-</div>
-<script>
-window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{"bdSize":16}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
-</script>
-<style>
-    .bdshare_popup_box {
-        border-radius: 4px;
-        border: #e1e1e1 solid 1px;
-    }
-    .bdshare-button-style0-16 a,
-    .bdshare-button-style0-16 .bds_more {
-        padding-left: 20px;
-        margin: 6px 10px 6px 0;
-    }
-    .bdshare_dialog_list a,
-    .bdshare_popup_list a,
-    .bdshare_popup_bottom a {
-        font-family: 'Microsoft Yahei';
-    }
-    .bdshare_popup_top {
-        display: none;
-    }
-    .bdshare_popup_bottom {
-        height: auto;
-        padding: 5px;
-    }
-</style>
-
-
-</div>
-
-            
-    
-        <a href="http://www.jinzili.cc/2017/10/25/Spring-Cloud-Eureka/#comments" class="article-comment-link">评论</a>
-    
-
-        </footer>
-    </div>
-    
-</article>
-
-
-
-    <article id="post-2017-10-19-路灯下有感" class="article article-type-post" itemscope itemprop="blogPost">
-    <div class="article-inner">
-        
-        
-            <header class="article-header">
-                
-    
-        <h1 itemprop="name">
-            <a class="article-title" href="/2017/10/21/2017-10-19-路灯下有感/">2017-10-19:路灯下有感</a>
-        </h1>
-    
-
-                
-                    <div class="article-meta">
-                        
-    <div class="article-date">
-        <i class="fas fa-calendar-alt"></i>
-        <a href="/2017/10/21/2017-10-19-路灯下有感/">
-            <time datetime="2017-10-21T01:20:47.000Z" itemprop="datePublished">2017-10-21</time>
-        </a>
-    </div>
-
-
-                        
-    <div class="article-category">
-    	<i class="fas fa-folder"></i>
-        <a class="article-category-link" href="/categories/随笔/">随笔</a>
-    </div>
-
-                        
-    <div class="article-tag">
-        <i class="fas fa-tag"></i>
-        <a class="tag-link" href="/tags/心情/">心情</a>, <a class="tag-link" href="/tags/随笔/">随笔</a>
-    </div>
-
-                    </div>
-                
-            </header>
-        
-        
-        <div class="article-entry" itemprop="articleBody">
-        
-            
-            <h4 id="月下旧人归，"><a href="#月下旧人归，" class="headerlink" title="月下旧人归，"></a><em>月下旧人归，</em></h4><h4 id="人生几多回。"><a href="#人生几多回。" class="headerlink" title="人生几多回。"></a><em>人生几多回。</em></h4><h4 id="拨开云雾里，"><a href="#拨开云雾里，" class="headerlink" title="拨开云雾里，"></a><em>拨开云雾里，</em></h4><h4 id="心中自有醉。"><a href="#心中自有醉。" class="headerlink" title="心中自有醉。"></a><em>心中自有醉。</em></h4><p><img src="https://static.oschina.net/uploads/space/2017/1021/092459_Co4p_3559870.jpeg" alt="image"></p>
-
-        
-        </div>
-        <footer class="article-footer">
-            <div class="share-container">
-
-
-    <div class="bdsharebuttonbox">
-    <a href="#" class="bds_more" data-cmd="more">分享到：</a>
-    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">QQ空间</a>
-    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">新浪微博</a>
-    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">腾讯微博</a>
-    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">人人网</a>
-    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">微信</a>
-</div>
-<script>
-window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{"bdSize":16}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
-</script>
-<style>
-    .bdshare_popup_box {
-        border-radius: 4px;
-        border: #e1e1e1 solid 1px;
-    }
-    .bdshare-button-style0-16 a,
-    .bdshare-button-style0-16 .bds_more {
-        padding-left: 20px;
-        margin: 6px 10px 6px 0;
-    }
-    .bdshare_dialog_list a,
-    .bdshare_popup_list a,
-    .bdshare_popup_bottom a {
-        font-family: 'Microsoft Yahei';
-    }
-    .bdshare_popup_top {
-        display: none;
-    }
-    .bdshare_popup_bottom {
-        height: auto;
-        padding: 5px;
-    }
-</style>
-
-
-</div>
-
-            
-    
-        <a href="http://www.jinzili.cc/2017/10/21/2017-10-19-路灯下有感/#comments" class="article-comment-link">评论</a>
-    
-
-        </footer>
-    </div>
-    
-</article>
-
-
-
-    <article id="post-quartz集群配置" class="article article-type-post" itemscope itemprop="blogPost">
-    <div class="article-inner">
-        
-        
-            <header class="article-header">
-                
-    
-        <h1 itemprop="name">
-            <a class="article-title" href="/2017/10/19/quartz集群配置/">quartz集群配置</a>
-        </h1>
-    
-
-                
-                    <div class="article-meta">
-                        
-    <div class="article-date">
-        <i class="fas fa-calendar-alt"></i>
-        <a href="/2017/10/19/quartz集群配置/">
-            <time datetime="2017-10-19T07:14:27.000Z" itemprop="datePublished">2017-10-19</time>
-        </a>
-    </div>
-
-
-                        
-    <div class="article-category">
-    	<i class="fas fa-folder"></i>
-        <a class="article-category-link" href="/categories/Java-Framework/">Java Framework</a>
-    </div>
-
-                        
-    <div class="article-tag">
-        <i class="fas fa-tag"></i>
-        <a class="tag-link" href="/tags/quartz/">quartz</a>
-    </div>
-
-                    </div>
-                
-            </header>
-        
-        
-        <div class="article-entry" itemprop="articleBody">
-        
-            
-            <h1 id="JobStore"><a href="#JobStore" class="headerlink" title="JobStore"></a>JobStore</h1><p>在开始配置quartz集群之前，先要了解一下Scheduler的“工作数据”的存放点：</p>
-<h2 id="RAMJobStore"><a href="#RAMJobStore" class="headerlink" title="RAMJobStore"></a>RAMJobStore</h2><p>RAMJobStore是最简单最高效，也是quartz默认的存储方式，它将“工作数据”存放在内存中，所以它无需任何额外配置，也是最高效的原因。但是这种方式的弊端也是显而易见的：</p>
-<ul>
-<li>任务量受限于内存大小</li>
-<li>当系统崩溃时，就丢掉了所有任务信息，这对于一些程序是灾难性的</li>
-<li>无法集群化</li>
-</ul>
-<h2 id="JDBCJobStore"><a href="#JDBCJobStore" class="headerlink" title="JDBCJobStore"></a>JDBCJobStore</h2><p>看到JDBC我们就应该已经知道了，这种方式是将“工作数据”存储到了数据库中并且广泛适用于所有数据库，这既有利：</p>
-<ul>
-<li>任务量没有限制</li>
-<li>持久化任务信息</li>
-<li>可集群化</li>
-<li>失败转移(fail-over, 集群化情况下，其中一台系统崩溃会自动将任务转移到其他可用系统上)</li>
-</ul>
-<p>也有弊：</p>
-<ul>
-<li>没有RAMJobStore方式高效</li>
-<li>增大数据库压力</li>
-</ul>
-<p>相比之下，利远大于弊，所以一般使用quartz框架都使用JDBCJobStore这种方式。</p>
-<h3 id="两种事务管理方式"><a href="#两种事务管理方式" class="headerlink" title="两种事务管理方式"></a>两种事务管理方式</h3><p>quartz提供了两种事务管理方式：</p>
-<h4 id="JobStoreTX"><a href="#JobStoreTX" class="headerlink" title="JobStoreTX"></a>JobStoreTX</h4><p>quartz框架自己管理事务，这是最常用的方式</p>
-<h4 id="JobStoreCMT"><a href="#JobStoreCMT" class="headerlink" title="JobStoreCMT"></a>JobStoreCMT</h4><p>将quartz框架的事务集成到J2EE容器事务中。</p>
-<h1 id="quartz-properties"><a href="#quartz-properties" class="headerlink" title="quartz.properties"></a>quartz.properties</h1><p>程序启动时，会默认读取classpath下的quartz.properties，所以我们将配置都写在此文件中：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"># 在同一个项目中name不同（用来区分scheduler）, 在集群中name相同</span><br><span class="line">quartz.scheduler.instanceName=myScheduler</span><br><span class="line">#org.quartz.jobStore.dataSource=myDS</span><br><span class="line">#org.quartz.dataSource.myDS.driver=com.mysql.cj.jdbc.Driver</span><br><span class="line">#org.quartz.dataSource.myDS.URL=jdbc:mysql://localhost:3306/quartzdb?useUnicode=true&amp;characterEncoding=utf8</span><br><span class="line">#org.quartz.dataSource.myDS.user=root</span><br><span class="line">#org.quartz.dataSource.myDS.password=root</span><br><span class="line">#org.quartz.dataSource.myDS.maxConnections=10</span><br><span class="line"></span><br><span class="line"># 可以为任意字符串, 但必须保持唯一, AUTO 自动生成ID, SYS_PROP使用系统环境变量$&#123;org.quartz.scheduler.instanceId&#125;</span><br><span class="line">org.quartz.scheduler.instanceId=AUTO</span><br><span class="line"># 是否跳过更新检查</span><br><span class="line">org.quartz.scheduler.skipUpdateCheck=true</span><br><span class="line"># 是否打开quartz的JMX支持</span><br><span class="line">org.quartz.scheduler.jmx.export=true</span><br><span class="line"># jobStore类配置</span><br><span class="line">org.quartz.jobStore.class=org.quartz.impl.jdbcjobstore.JobStoreTX</span><br><span class="line"># 通过JDBC访问数据库的代理类</span><br><span class="line">org.quartz.jobStore.driverDelegateClass=org.quartz.impl.jdbcjobstore.StdJDBCDelegate</span><br><span class="line"># quartz数据表前缀</span><br><span class="line"># org.quartz.jobStore.tablePrefix=T_B_QRTZ_</span><br><span class="line"># 是否使用集群</span><br><span class="line">org.quartz.jobStore.isClustered=true</span><br><span class="line"># 集群状态的更新时间间隔</span><br><span class="line">org.quartz.jobStore.clusterCheckinInterval=20000</span><br><span class="line"># 最大错误重试次数</span><br><span class="line">org.quartz.jobStore.maxMisfiresToHandleAtATime=1</span><br><span class="line"># 在Trigger被认为是错误触发之前, scheduler还容许Trigger通过它的下次触发时间的秒数, 默认60000</span><br><span class="line">org.quartz.jobStore.misfireThreshold=120000</span><br><span class="line"># 调用setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE)方法设置事务级别</span><br><span class="line">org.quartz.jobStore.txIsolationLevelSerializable=true</span><br><span class="line"># 必须为一个sql字符串, 查询locks表里的一行, &#123;0&#125;被覆盖为tablePrefix ? 被覆盖为scheduler&apos;s name</span><br><span class="line">org.quartz.jobStore.selectWithLockSQL=SELECT * FROM &#123;0&#125;LOCKS WHERE LOCK_NAME = ? FOR UPDATE</span><br><span class="line"></span><br><span class="line"># 使用的线程池实例</span><br><span class="line">org.quartz.threadPool.class=org.quartz.simpl.SimpleThreadPool</span><br><span class="line"># 线程池中线程数, 很大取决于任务的性质和系统资源</span><br><span class="line">org.quartz.threadPool.threadCount=10</span><br><span class="line"># 线程的优先级, 介于Thread.MIN_PRIORITY(1)和Thread.PRIORITY(10), 默认Thread.NORM_PRIORITY(5)</span><br><span class="line">org.quartz.threadPool.threadPriority=5</span><br><span class="line"># 加载任务代码的ClassLoader是否从外部继承</span><br><span class="line">org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread=true</span><br><span class="line"># trigger历史记录插件</span><br><span class="line">org.quartz.plugin.triggHistory.class=org.quartz.plugins.history.LoggingJobHistoryPlugin</span><br><span class="line"># shutdown-hook 插件捕捉JVM关闭时间并调用scheduler的shutdown方法</span><br><span class="line">org.quartz.plugin.shutdownhook.class=org.quartz.plugins.management.ShutdownHookPlugin</span><br><span class="line">org.quartz.plugin.shutdownhook.cleanShutdown=true</span><br></pre></td></tr></table></figure>
-<p>在这里我注释掉了关于数据库连接信息的配置，决定在quartConfig.java文件中注入dataSource。</p>
-<h1 id="SpringJobFactoryConfig-java"><a href="#SpringJobFactoryConfig-java" class="headerlink" title="SpringJobFactoryConfig.java"></a>SpringJobFactoryConfig.java</h1><p>在Job执行类中，无法注入Spring容器中的bean，因为Spring容器和quartz容器是隔离开的，所以我们需要使用Spring提供的AutowireCapableBeanFactory（可装配applicationContext之外的bean）和重写AdaptableJobFactory中的createJobInstance方法。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * TODO 自定义JobFactory, 为了注入jobInstance中的<span class="doctag">@Autowired</span> <span class="doctag">@Resource</span>等实例</span></span><br><span class="line"><span class="comment"> * Created by jinzili on 25/09/2017.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpringJobFactoryConfig</span> <span class="keyword">extends</span> <span class="title">AdaptableJobFactory</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 装配applicationContext管理之外的bean</span></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> AutowireCapableBeanFactory capableBeanFactory;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> Object <span class="title">createJobInstance</span><span class="params">(TriggerFiredBundle bundle)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        Object jobInstance = <span class="keyword">super</span>.createJobInstance(bundle);</span><br><span class="line">        <span class="comment">// 装配jobInstance</span></span><br><span class="line">        capableBeanFactory.autowireBean(jobInstance);</span><br><span class="line">        <span class="keyword">return</span> jobInstance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="QuartzConfig-java"><a href="#QuartzConfig-java" class="headerlink" title="QuartzConfig.java"></a>QuartzConfig.java</h1><p>将自定义的JobFactory配置到SchedulerFactoryBean和Scheduler：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">QuartzConfig</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> SpringJobFactoryConfig springJobFactory;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Qualifier</span>(<span class="string">"dataSource"</span>)</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> DataSource dataSource;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> SchedulerFactoryBean <span class="title">schedulerFactoryBean</span><span class="params">()</span></span>&#123;</span><br><span class="line">        SchedulerFactoryBean factory = <span class="keyword">new</span> SchedulerFactoryBean();</span><br><span class="line">        <span class="comment">// 是否覆盖已存在的job</span></span><br><span class="line">        factory.setOverwriteExistingJobs(<span class="keyword">true</span>);</span><br><span class="line">        <span class="comment">// 配置数据源</span></span><br><span class="line">        System.out.println(dataSource);</span><br><span class="line">        factory.setDataSource(dataSource);</span><br><span class="line">        <span class="comment">// 启动延时</span></span><br><span class="line">        factory.setStartupDelay(<span class="number">10</span>);</span><br><span class="line">        <span class="comment">// 是否自动启动</span></span><br><span class="line">        factory.setAutoStartup(<span class="keyword">true</span>);</span><br><span class="line"><span class="comment">//        factory.setQuartzProperties(this.quartzProperties());</span></span><br><span class="line">        factory.setApplicationContextSchedulerContextKey(<span class="string">"applicationContext"</span>);</span><br><span class="line">        <span class="comment">// 配置自定义JobFactory</span></span><br><span class="line">        factory.setJobFactory(springJobFactory);</span><br><span class="line">        <span class="keyword">return</span> factory;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Scheduler <span class="title">scheduler</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> schedulerFactoryBean().getScheduler();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在其他bean中通过注入scheduler来增删改查Job。</p>
-<p>至此，一个有可持久化，集群化，失败转移的功能的quartz框架就搭建好了。</p>
-
-        
-        </div>
-        <footer class="article-footer">
-            <div class="share-container">
-
-
-    <div class="bdsharebuttonbox">
-    <a href="#" class="bds_more" data-cmd="more">分享到：</a>
-    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">QQ空间</a>
-    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">新浪微博</a>
-    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">腾讯微博</a>
-    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">人人网</a>
-    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">微信</a>
-</div>
-<script>
-window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{"bdSize":16}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
-</script>
-<style>
-    .bdshare_popup_box {
-        border-radius: 4px;
-        border: #e1e1e1 solid 1px;
-    }
-    .bdshare-button-style0-16 a,
-    .bdshare-button-style0-16 .bds_more {
-        padding-left: 20px;
-        margin: 6px 10px 6px 0;
-    }
-    .bdshare_dialog_list a,
-    .bdshare_popup_list a,
-    .bdshare_popup_bottom a {
-        font-family: 'Microsoft Yahei';
-    }
-    .bdshare_popup_top {
-        display: none;
-    }
-    .bdshare_popup_bottom {
-        height: auto;
-        padding: 5px;
-    }
-</style>
-
-
-</div>
-
-            
-    
-        <a href="http://www.jinzili.cc/2017/10/19/quartz集群配置/#comments" class="article-comment-link">评论</a>
-    
-
-        </footer>
-    </div>
-    
-</article>
-
-
-
     <nav id="page-nav">
         <a class="extend prev" rel="prev" href="/">&laquo; 上一页</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/3/">下一页 &raquo;</a>
     </nav>
@@ -1366,6 +1419,63 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
         <h3 class="widget-title">最新文章</h3>
         <div class="widget">
             <ul id="recent-post" class="">
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2018/08/19/大数据学习-IO和netty/" class="thumbnail">
+    
+    
+        <span class="thumbnail-image thumbnail-none"></span>
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/大数据/">大数据</a></p>
+                            <p class="item-title"><a href="/2018/08/19/大数据学习-IO和netty/" class="title">大数据学习 - IO和netty</a></p>
+                            <p class="item-date"><time datetime="2018-08-19T13:34:26.000Z" itemprop="datePublished">2018-08-19</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2018/08/19/大数据学习-RPC/" class="thumbnail">
+    
+    
+        <span class="thumbnail-image thumbnail-none"></span>
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/大数据/">大数据</a></p>
+                            <p class="item-title"><a href="/2018/08/19/大数据学习-RPC/" class="title">大数据学习 - RPC</a></p>
+                            <p class="item-date"><time datetime="2018-08-19T13:33:37.000Z" itemprop="datePublished">2018-08-19</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-thumbnail">
+                            <a href="/2018/08/19/大数据学习-socket/" class="thumbnail">
+    
+    
+        <span class="thumbnail-image thumbnail-none"></span>
+    
+</a>
+
+                        </div>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"><a class="article-category-link" href="/categories/大数据/">大数据</a></p>
+                            <p class="item-title"><a href="/2018/08/19/大数据学习-socket/" class="title">大数据学习 - socket</a></p>
+                            <p class="item-date"><time datetime="2018-08-19T13:33:01.000Z" itemprop="datePublished">2018-08-19</time></p>
+                        </div>
+                    </li>
                 
                     <li>
                         
@@ -1405,63 +1515,6 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
                         </div>
                     </li>
                 
-                    <li>
-                        
-                        <div class="item-thumbnail">
-                            <a href="/2018/07/29/大数据学习-Java并发包/" class="thumbnail">
-    
-    
-        <span class="thumbnail-image thumbnail-none"></span>
-    
-</a>
-
-                        </div>
-                        
-                        <div class="item-inner">
-                            <p class="item-category"><a class="article-category-link" href="/categories/大数据/">大数据</a></p>
-                            <p class="item-title"><a href="/2018/07/29/大数据学习-Java并发包/" class="title">大数据学习 - Java并发包</a></p>
-                            <p class="item-date"><time datetime="2018-07-29T14:24:52.000Z" itemprop="datePublished">2018-07-29</time></p>
-                        </div>
-                    </li>
-                
-                    <li>
-                        
-                        <div class="item-thumbnail">
-                            <a href="/2018/07/29/大数据学习-多线程/" class="thumbnail">
-    
-    
-        <span class="thumbnail-image thumbnail-none"></span>
-    
-</a>
-
-                        </div>
-                        
-                        <div class="item-inner">
-                            <p class="item-category"><a class="article-category-link" href="/categories/大数据/">大数据</a></p>
-                            <p class="item-title"><a href="/2018/07/29/大数据学习-多线程/" class="title">大数据学习 - 多线程</a></p>
-                            <p class="item-date"><time datetime="2018-07-29T14:24:42.000Z" itemprop="datePublished">2018-07-29</time></p>
-                        </div>
-                    </li>
-                
-                    <li>
-                        
-                        <div class="item-thumbnail">
-                            <a href="/2018/07/22/大数据学习-zookeeper简单命令及java-api/" class="thumbnail">
-    
-    
-        <span class="thumbnail-image thumbnail-none"></span>
-    
-</a>
-
-                        </div>
-                        
-                        <div class="item-inner">
-                            <p class="item-category"><a class="article-category-link" href="/categories/大数据/">大数据</a></p>
-                            <p class="item-title"><a href="/2018/07/22/大数据学习-zookeeper简单命令及java-api/" class="title">大数据学习 - zookeeper简单命令及java api</a></p>
-                            <p class="item-date"><time datetime="2018-07-22T13:43:32.000Z" itemprop="datePublished">2018-07-22</time></p>
-                        </div>
-                    </li>
-                
             </ul>
         </div>
     </div>
@@ -1471,7 +1524,7 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
     <div class="widget-wrap">
         <h3 class="widget-title">分类</h3>
         <div class="widget">
-            <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/DevOps/">DevOps</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java-Framework/">Java Framework</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaBase/">JavaBase</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Cloud/">Spring Cloud</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/大数据/">大数据</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/开发心得/">开发心得</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/随笔/">随笔</a><span class="category-list-count">1</span></li></ul>
+            <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/DevOps/">DevOps</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java-Framework/">Java Framework</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaBase/">JavaBase</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Cloud/">Spring Cloud</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/大数据/">大数据</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/开发心得/">开发心得</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/技术杂谈/">技术杂谈</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/随笔/">随笔</a><span class="category-list-count">1</span></li></ul>
         </div>
     </div>
 
@@ -1480,7 +1533,7 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
     <div class="widget-wrap">
         <h3 class="widget-title">归档</h3>
         <div class="widget">
-            <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">14</span></li></ul>
+            <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">14</span></li></ul>
         </div>
     </div>
 
@@ -1489,7 +1542,7 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
     <div class="widget-wrap">
         <h3 class="widget-title">标签</h3>
         <div class="widget">
-            <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deep-Clone/">Deep Clone</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Eureka/">Eureka</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Feign/">Feign</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Http/">Http</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JMS/">JMS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JavaUtils/">JavaUtils</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Mybatis/">Mybatis</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ribbon/">Ribbon</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringCloud/">SpringCloud</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringDataJPA/">SpringDataJPA</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringMVC/">SpringMVC</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WebSocket/">WebSocket</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/centos7/">centos7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/dashboard/">dashboard</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/docker/">docker</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/js/">js</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/k8s/">k8s</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubeadm/">kubeadm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubernetes/">kubernetes</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/node/">node</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/online/">online</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/quartz/">quartz</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/synchronized/">synchronized</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/">web</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/zookeeper/">zookeeper</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/下载文件/">下载文件</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/原子性/">原子性</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/反射/">反射</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/多线程/">多线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/大数据/">大数据</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/并发包/">并发包</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/开发心得/">开发心得</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/心情/">心情</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/类加载/">类加载</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/聊天室/">聊天室</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/跨域/">跨域</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/随笔/">随笔</a><span class="tag-list-count">1</span></li></ul>
+            <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deep-Clone/">Deep Clone</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Eureka/">Eureka</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Feign/">Feign</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Http/">Http</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IO/">IO</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JMS/">JMS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JavaUtils/">JavaUtils</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Mybatis/">Mybatis</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/RPC/">RPC</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ribbon/">Ribbon</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringCloud/">SpringCloud</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringDataJPA/">SpringDataJPA</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringMVC/">SpringMVC</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WebSocket/">WebSocket</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/centos7/">centos7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/dashboard/">dashboard</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/docker/">docker</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/js/">js</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/k8s/">k8s</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubeadm/">kubeadm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubernetes/">kubernetes</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/node/">node</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/online/">online</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/quartz/">quartz</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/socket/">socket</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/synchronized/">synchronized</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/">web</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/zookeeper/">zookeeper</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/下载文件/">下载文件</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/原子性/">原子性</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/反射/">反射</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/多线程/">多线程</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/大数据/">大数据</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/并发包/">并发包</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/开发心得/">开发心得</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/心情/">心情</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/类加载/">类加载</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/聊天室/">聊天室</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/跨域/">跨域</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/随笔/">随笔</a><span class="tag-list-count">1</span></li></ul>
         </div>
     </div>
 
@@ -1498,7 +1551,7 @@ window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMin
     <div class="widget-wrap">
         <h3 class="widget-title">标签云</h3>
         <div class="widget tagcloud">
-            <a href="/tags/Deep-Clone/" style="font-size: 10px;">Deep Clone</a> <a href="/tags/Eureka/" style="font-size: 10px;">Eureka</a> <a href="/tags/Feign/" style="font-size: 10px;">Feign</a> <a href="/tags/Hibernate/" style="font-size: 10px;">Hibernate</a> <a href="/tags/Http/" style="font-size: 10px;">Http</a> <a href="/tags/JMS/" style="font-size: 10px;">JMS</a> <a href="/tags/JavaUtils/" style="font-size: 10px;">JavaUtils</a> <a href="/tags/Mybatis/" style="font-size: 10px;">Mybatis</a> <a href="/tags/Ribbon/" style="font-size: 10px;">Ribbon</a> <a href="/tags/SpringCloud/" style="font-size: 10px;">SpringCloud</a> <a href="/tags/SpringDataJPA/" style="font-size: 10px;">SpringDataJPA</a> <a href="/tags/SpringMVC/" style="font-size: 13.33px;">SpringMVC</a> <a href="/tags/WebSocket/" style="font-size: 10px;">WebSocket</a> <a href="/tags/centos7/" style="font-size: 10px;">centos7</a> <a href="/tags/dashboard/" style="font-size: 10px;">dashboard</a> <a href="/tags/docker/" style="font-size: 13.33px;">docker</a> <a href="/tags/js/" style="font-size: 10px;">js</a> <a href="/tags/k8s/" style="font-size: 13.33px;">k8s</a> <a href="/tags/kubeadm/" style="font-size: 10px;">kubeadm</a> <a href="/tags/kubernetes/" style="font-size: 16.67px;">kubernetes</a> <a href="/tags/node/" style="font-size: 10px;">node</a> <a href="/tags/online/" style="font-size: 10px;">online</a> <a href="/tags/quartz/" style="font-size: 16.67px;">quartz</a> <a href="/tags/synchronized/" style="font-size: 10px;">synchronized</a> <a href="/tags/web/" style="font-size: 13.33px;">web</a> <a href="/tags/zookeeper/" style="font-size: 13.33px;">zookeeper</a> <a href="/tags/下载文件/" style="font-size: 10px;">下载文件</a> <a href="/tags/原子性/" style="font-size: 10px;">原子性</a> <a href="/tags/反射/" style="font-size: 10px;">反射</a> <a href="/tags/多线程/" style="font-size: 10px;">多线程</a> <a href="/tags/大数据/" style="font-size: 20px;">大数据</a> <a href="/tags/并发包/" style="font-size: 10px;">并发包</a> <a href="/tags/开发心得/" style="font-size: 10px;">开发心得</a> <a href="/tags/心情/" style="font-size: 10px;">心情</a> <a href="/tags/类加载/" style="font-size: 13.33px;">类加载</a> <a href="/tags/聊天室/" style="font-size: 10px;">聊天室</a> <a href="/tags/跨域/" style="font-size: 10px;">跨域</a> <a href="/tags/锁/" style="font-size: 10px;">锁</a> <a href="/tags/随笔/" style="font-size: 10px;">随笔</a>
+            <a href="/tags/Deep-Clone/" style="font-size: 10px;">Deep Clone</a> <a href="/tags/Eureka/" style="font-size: 10px;">Eureka</a> <a href="/tags/Feign/" style="font-size: 10px;">Feign</a> <a href="/tags/Hibernate/" style="font-size: 10px;">Hibernate</a> <a href="/tags/Http/" style="font-size: 10px;">Http</a> <a href="/tags/IO/" style="font-size: 10px;">IO</a> <a href="/tags/JMS/" style="font-size: 10px;">JMS</a> <a href="/tags/JavaUtils/" style="font-size: 10px;">JavaUtils</a> <a href="/tags/Mybatis/" style="font-size: 10px;">Mybatis</a> <a href="/tags/RPC/" style="font-size: 10px;">RPC</a> <a href="/tags/Ribbon/" style="font-size: 10px;">Ribbon</a> <a href="/tags/SpringCloud/" style="font-size: 10px;">SpringCloud</a> <a href="/tags/SpringDataJPA/" style="font-size: 10px;">SpringDataJPA</a> <a href="/tags/SpringMVC/" style="font-size: 13.33px;">SpringMVC</a> <a href="/tags/WebSocket/" style="font-size: 10px;">WebSocket</a> <a href="/tags/centos7/" style="font-size: 10px;">centos7</a> <a href="/tags/dashboard/" style="font-size: 10px;">dashboard</a> <a href="/tags/docker/" style="font-size: 13.33px;">docker</a> <a href="/tags/js/" style="font-size: 10px;">js</a> <a href="/tags/k8s/" style="font-size: 13.33px;">k8s</a> <a href="/tags/kubeadm/" style="font-size: 10px;">kubeadm</a> <a href="/tags/kubernetes/" style="font-size: 16.67px;">kubernetes</a> <a href="/tags/netty/" style="font-size: 10px;">netty</a> <a href="/tags/node/" style="font-size: 10px;">node</a> <a href="/tags/online/" style="font-size: 10px;">online</a> <a href="/tags/quartz/" style="font-size: 16.67px;">quartz</a> <a href="/tags/socket/" style="font-size: 10px;">socket</a> <a href="/tags/synchronized/" style="font-size: 10px;">synchronized</a> <a href="/tags/web/" style="font-size: 13.33px;">web</a> <a href="/tags/zookeeper/" style="font-size: 13.33px;">zookeeper</a> <a href="/tags/下载文件/" style="font-size: 10px;">下载文件</a> <a href="/tags/原子性/" style="font-size: 10px;">原子性</a> <a href="/tags/反射/" style="font-size: 10px;">反射</a> <a href="/tags/多线程/" style="font-size: 10px;">多线程</a> <a href="/tags/大数据/" style="font-size: 20px;">大数据</a> <a href="/tags/并发包/" style="font-size: 10px;">并发包</a> <a href="/tags/开发心得/" style="font-size: 10px;">开发心得</a> <a href="/tags/心情/" style="font-size: 10px;">心情</a> <a href="/tags/类加载/" style="font-size: 13.33px;">类加载</a> <a href="/tags/聊天室/" style="font-size: 10px;">聊天室</a> <a href="/tags/跨域/" style="font-size: 10px;">跨域</a> <a href="/tags/锁/" style="font-size: 10px;">锁</a> <a href="/tags/随笔/" style="font-size: 10px;">随笔</a>
         </div>
     </div>
 
