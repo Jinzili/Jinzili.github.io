@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.jinzili.cc/2018/09/09/%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%AD%A6%E4%B9%A0-hadoop/</loc>
+    
+    <lastmod>2018-09-09T13:36:16.882Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.jinzili.cc/2018/08/19/%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%AD%A6%E4%B9%A0-IO%E5%92%8Cnetty/</loc>
     
     <lastmod>2018-08-19T13:34:48.303Z</lastmod>
@@ -107,14 +114,14 @@
   </url>
   
   <url>
-    <loc>http://www.jinzili.cc/%E9%87%91%E8%87%AA%E5%8A%9B/index.html</loc>
+    <loc>http://www.jinzili.cc/tags/index.html</loc>
     
     <lastmod>2018-04-21T02:24:21.769Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://www.jinzili.cc/tags/index.html</loc>
+    <loc>http://www.jinzili.cc/%E9%87%91%E8%87%AA%E5%8A%9B/index.html</loc>
     
     <lastmod>2018-04-21T02:24:21.769Z</lastmod>
     
@@ -128,7 +135,7 @@
   </url>
   
   <url>
-    <loc>http://www.jinzili.cc/2017/10/08/%E8%AE%A9centos7%E4%B8%AD%E7%9A%84docker%E9%A3%9E%E8%BF%87%E5%A2%99/</loc>
+    <loc>http://www.jinzili.cc/2017/11/21/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91%E5%BF%83%E5%BE%97%E8%AE%B0%E5%BD%95/</loc>
     
     <lastmod>2018-04-21T02:24:21.738Z</lastmod>
     
@@ -142,9 +149,16 @@
   </url>
   
   <url>
-    <loc>http://www.jinzili.cc/2017/11/21/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91%E5%BF%83%E5%BE%97%E8%AE%B0%E5%BD%95/</loc>
+    <loc>http://www.jinzili.cc/2017/10/08/%E8%AE%A9centos7%E4%B8%AD%E7%9A%84docker%E9%A3%9E%E8%BF%87%E5%A2%99/</loc>
     
     <lastmod>2018-04-21T02:24:21.738Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.jinzili.cc/2017/10/08/%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E5%9F%BA%E4%BA%8Edocker%E7%9A%84kubernetes%E9%9B%86%E7%BE%A4/</loc>
+    
+    <lastmod>2018-04-21T02:24:21.737Z</lastmod>
     
   </url>
   
@@ -163,21 +177,14 @@
   </url>
   
   <url>
-    <loc>http://www.jinzili.cc/2017/10/08/%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E5%9F%BA%E4%BA%8Edocker%E7%9A%84kubernetes%E9%9B%86%E7%BE%A4/</loc>
-    
-    <lastmod>2018-04-21T02:24:21.737Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.jinzili.cc/2017/10/08/%E5%9C%A8web%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BA%94%E7%94%A8Mybatis/</loc>
+    <loc>http://www.jinzili.cc/2017/11/30/quartz%E7%9A%84misfire%E7%AD%96%E7%95%A5/</loc>
     
     <lastmod>2018-04-21T02:24:21.736Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://www.jinzili.cc/2017/10/19/quartz%E9%9B%86%E7%BE%A4%E9%85%8D%E7%BD%AE/</loc>
+    <loc>http://www.jinzili.cc/2017/10/08/%E5%9C%A8web%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%BA%94%E7%94%A8Mybatis/</loc>
     
     <lastmod>2018-04-21T02:24:21.736Z</lastmod>
     
@@ -191,7 +198,7 @@
   </url>
   
   <url>
-    <loc>http://www.jinzili.cc/2017/11/30/quartz%E7%9A%84misfire%E7%AD%96%E7%95%A5/</loc>
+    <loc>http://www.jinzili.cc/2017/10/19/quartz%E9%9B%86%E7%BE%A4%E9%85%8D%E7%BD%AE/</loc>
     
     <lastmod>2018-04-21T02:24:21.736Z</lastmod>
     
@@ -212,13 +219,6 @@
   </url>
   
   <url>
-    <loc>http://www.jinzili.cc/2017/10/11/Spring-Data-JPA%E4%B8%AD%E7%9A%84nativeQuery%E5%92%8Cpageable/</loc>
-    
-    <lastmod>2018-04-21T02:24:21.734Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://www.jinzili.cc/2017/12/23/Spring-Cloud-Feign/</loc>
     
     <lastmod>2018-04-21T02:24:21.734Z</lastmod>
@@ -226,9 +226,9 @@
   </url>
   
   <url>
-    <loc>http://www.jinzili.cc/2017/11/27/Kubernetes-%E4%B8%93%E6%B2%BB%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/</loc>
+    <loc>http://www.jinzili.cc/2017/10/11/Spring-Data-JPA%E4%B8%AD%E7%9A%84nativeQuery%E5%92%8Cpageable/</loc>
     
-    <lastmod>2018-04-21T02:24:21.733Z</lastmod>
+    <lastmod>2018-04-21T02:24:21.734Z</lastmod>
     
   </url>
   
@@ -240,14 +240,21 @@
   </url>
   
   <url>
-    <loc>http://www.jinzili.cc/2017/11/25/Java-synchronized/</loc>
+    <loc>http://www.jinzili.cc/2017/11/27/Kubernetes-%E4%B8%93%E6%B2%BB%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/</loc>
+    
+    <lastmod>2018-04-21T02:24:21.733Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.jinzili.cc/2018/01/04/Hibernate-no-longer-referenced%E5%BC%82%E5%B8%B8/</loc>
     
     <lastmod>2018-04-21T02:24:21.732Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://www.jinzili.cc/2018/01/04/Hibernate-no-longer-referenced%E5%BC%82%E5%B8%B8/</loc>
+    <loc>http://www.jinzili.cc/2017/11/25/Java-synchronized/</loc>
     
     <lastmod>2018-04-21T02:24:21.732Z</lastmod>
     
